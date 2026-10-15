@@ -135,8 +135,8 @@ const en: Content = {
   hero: {
     role: 'Electronics engineer: embedded systems, PCB design, sensing for UAVs',
     intro:
-      'I design and debug electronics from the schematic to the firmware: multilayer PCBs in KiCad, code on STM32 and ESP32, and the sensor chain that goes with them. My recent work covers an indoor UAV with a LiDAR, a precision LCR-meter and a high-voltage test bench.',
-    cta: 'See what I can do',
+      'I work on embedded electronics, from the schematic to the firmware: PCBs in KiCad, code on STM32 and ESP32, sensors. My latest projects: an indoor UAV with a LiDAR, an LCR-meter and a high-voltage test bench.',
+    cta: 'See my skills',
     demoCaption:
       'Generated live in your browser: a synthetic 2D LiDAR scan plus altitude, accumulated into a pseudo-3D map. It is the method I used on the UAV project.',
     hint: 'Drag to rotate',
@@ -145,7 +145,7 @@ const en: Content = {
   },
   projects: {
     heading: 'Projects',
-    rail: 'The detail behind the skills above: four projects, with my own part in each.',
+    rail: 'The four projects, with what I did in each.',
     labels: { period: 'Period', place: 'Where', role: 'Role' },
     items: [
       {
@@ -267,9 +267,9 @@ const en: Content = {
     ],
   },
   skills: {
-    heading: 'What I can do',
-    rail: 'Seven areas, each backed by something I built. Pick a project to see where it applies.',
-    filterLabel: 'Show evidence from',
+    heading: 'Skills',
+    rail: 'Seven areas, with what I did in each. Pick a project to filter.',
+    filterLabel: 'Filter by project',
     filterAll: 'All projects',
     capabilities: [
       {
@@ -321,7 +321,7 @@ const en: Content = {
       },
       {
         title: 'Autonomous systems and sensing',
-        statement: 'Indoor flight without GPS, and mechanics that hold up.',
+        statement: 'Indoor flight without GPS, and some mechanical design.',
         evidence: [
           { project: 'uav', text: 'Indoor flight without GPS, with LiDAR mapping synchronised with altitude.' },
           { project: 'robot', text: 'Centre of gravity and maximum arm payload before tilting computed; motor acceleration profiles shaped.' },
@@ -434,17 +434,17 @@ const fr: Content = {
   hero: {
     role: 'Ingénieur électronicien : systèmes embarqués, conception de PCB, capteurs pour drones',
     intro:
-      'Je conçois et débogue l’électronique du schéma au firmware : PCB multicouches sous KiCad, code sur STM32 et ESP32, et la chaîne de capteurs qui va avec. Mes travaux récents portent sur un drone d’intérieur équipé d’un LiDAR, un LCR-mètre de précision et un banc de test haute tension.',
-    cta: 'Voir ce que je sais faire',
+      'Je travaille sur l’électronique embarquée, du schéma au firmware : PCB sous KiCad, code sur STM32 et ESP32, capteurs. Mes derniers projets : un drone d’intérieur avec LiDAR, un LCR-mètre et un banc de test haute tension.',
+    cta: 'Voir mes compétences',
     demoCaption:
-      'Généré en direct dans votre navigateur : un scan LiDAR 2D synthétique plus l’altitude, accumulés en carte pseudo-3D. C’est la méthode que j’ai utilisée sur le projet drone.',
+      'Généré en direct dans le navigateur : un scan LiDAR 2D synthétique plus l’altitude, accumulés en carte pseudo-3D. C’est la méthode que j’ai utilisée sur le projet drone.',
     hint: 'Glisser pour tourner',
-    canvasLabel: 'Nuage de points interactif. Faites glisser, ou utilisez les flèches du clavier, pour tourner la vue.',
+    canvasLabel: 'Nuage de points interactif. Glisser, ou utiliser les flèches du clavier, pour tourner la vue.',
     hud: { altitude: 'Altitude', heading: 'Cap', points: 'Points' },
   },
   projects: {
     heading: 'Projets',
-    rail: 'Le détail derrière ces compétences : quatre projets, avec ma part dans chacun.',
+    rail: 'Les quatre projets, avec ce que j’ai fait dans chacun.',
     labels: { period: 'Période', place: 'Lieu', role: 'Rôle' },
     items: [
       {
@@ -566,9 +566,9 @@ const fr: Content = {
     ],
   },
   skills: {
-    heading: 'Ce que je sais faire',
-    rail: 'Sept domaines, chacun appuyé sur quelque chose que j’ai construit. Choisis un projet pour voir où il s’applique.',
-    filterLabel: 'Afficher les preuves de',
+    heading: 'Compétences',
+    rail: 'Sept domaines, avec ce que j’ai fait dans chacun. Choisis un projet pour filtrer.',
+    filterLabel: 'Filtrer par projet',
     filterAll: 'Tous les projets',
     capabilities: [
       {
@@ -620,7 +620,7 @@ const fr: Content = {
       },
       {
         title: 'Systèmes autonomes et perception',
-        statement: 'Du vol en intérieur sans GPS, et une mécanique qui tient.',
+        statement: 'Du vol en intérieur sans GPS, et un peu de conception mécanique.',
         evidence: [
           { project: 'uav', text: 'Vol en intérieur sans GPS, avec cartographie LiDAR synchronisée avec l’altitude.' },
           { project: 'robot', text: 'Calcul du centre de gravité et de la charge maximale du bras avant basculement ; profils d’accélération des moteurs.' },
@@ -733,8 +733,8 @@ const nl: Content = {
   hero: {
     role: 'Elektronica-ingenieur: embedded systemen, PCB-ontwerp, sensoren voor drones',
     intro:
-      'Ik ontwerp en debug elektronica van schema tot firmware: meerlaagse PCB’s in KiCad, code op STM32 en ESP32 en de bijbehorende sensorketen. Recent werk: een indoor-drone met LiDAR, een precisie-LCR-meter en een hoogspanningstestbank.',
-    cta: 'Bekijk wat ik kan',
+      'Ik werk aan embedded elektronica, van schema tot firmware: PCB’s in KiCad, code op STM32 en ESP32, sensoren. Mijn laatste projecten: een indoor-drone met LiDAR, een LCR-meter en een hoogspanningstestbank.',
+    cta: 'Mijn vaardigheden',
     demoCaption:
       'Live gegenereerd in je browser: een synthetische 2D-LiDAR-scan plus hoogte, opgebouwd tot een pseudo-3D-kaart. Dat is de methode die ik in het dronesproject gebruikte.',
     hint: 'Sleep om te draaien',
@@ -743,7 +743,7 @@ const nl: Content = {
   },
   projects: {
     heading: 'Projecten',
-    rail: 'De details achter deze vaardigheden: vier projecten, met mijn eigen aandeel in elk.',
+    rail: 'De vier projecten, met wat ik in elk heb gedaan.',
     labels: { period: 'Periode', place: 'Waar', role: 'Rol' },
     items: [
       {
@@ -865,9 +865,9 @@ const nl: Content = {
     ],
   },
   skills: {
-    heading: 'Wat ik kan',
-    rail: 'Zeven domeinen, elk onderbouwd met iets wat ik heb gebouwd. Kies een project om te zien waar het van toepassing is.',
-    filterLabel: 'Toon bewijs uit',
+    heading: 'Vaardigheden',
+    rail: 'Zeven domeinen, met wat ik in elk heb gedaan. Kies een project om te filteren.',
+    filterLabel: 'Filter op project',
     filterAll: 'Alle projecten',
     capabilities: [
       {
@@ -919,7 +919,7 @@ const nl: Content = {
       },
       {
         title: 'Autonome systemen en waarneming',
-        statement: 'Vliegen binnen zonder GPS, en mechanica die standhoudt.',
+        statement: 'Vliegen binnen zonder GPS, en wat mechanisch ontwerp.',
         evidence: [
           { project: 'uav', text: 'Vlucht binnen zonder GPS, met LiDAR-kartering gesynchroniseerd met de hoogte.' },
           { project: 'robot', text: 'Zwaartepunt en maximale armlast voor het kantelen berekend; acceleratieprofielen van de motoren afgestemd.' },
