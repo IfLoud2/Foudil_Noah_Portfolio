@@ -20,6 +20,7 @@ const cv = cvUrl(lang);
   <div>
     <p class="contact-text">{t.text}</p>
     {SITE.email && <a class="contact-mail" href={`mailto:${SITE.email}`}>{SITE.email}</a>}
+    {SITE.phone && <a class="contact-phone" href={`tel:${SITE.phone.replace(/\s/g, '')}`}>{SITE.phone}</a>}
     <div class="contact-links">
       {owner && <a href={`https://github.com/${owner}`} rel="me">{t.github}</a>}
       {cv && <a href={cv} download>{content[lang].cv}</a>}

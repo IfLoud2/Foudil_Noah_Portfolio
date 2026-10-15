@@ -14,9 +14,10 @@ export type FigureKey =
   | 'lcr3d'
   | 'lcrPrototype'
   | 'robotAssembly'
-  | 'robotStack';
+  | 'robotStack'
+  | 'hvdcCabinet';
 
-export type ProjectId = 'uav' | 'lcr' | 'robot' | 'hvdc';
+export type ProjectId = 'uav' | 'lcr' | 'robot' | 'hvdc' | 'fpga';
 
 export interface Figure {
   key: FigureKey;
@@ -33,6 +34,8 @@ export interface Project {
   place: string;
   role: string;
   summary: string;
+  /** Une ligne : résultat mesuré ou objectif de conception, sans chiffre inventé. */
+  result: string;
   points: string[];
   tags: string[];
   figures: Figure[];
@@ -79,7 +82,7 @@ export interface Content {
   localeName: string;
   meta: { title: string; description: string };
   skip: string;
-  nav: { label: string; skills: string; bench: string; projects: string; contact: string; language: string };
+  nav: { label: string; skills: string; bench: string; projects: string; path: string; contact: string; language: string };
   hero: {
     role: string;
     intro: string;
@@ -105,8 +108,15 @@ export interface Content {
   projects: {
     heading: string;
     rail: string;
-    labels: { period: string; place: string; role: string };
+    labels: { period: string; place: string; role: string; result: string };
     items: Project[];
+  };
+  path: {
+    heading: string;
+    rail: string;
+    seeProject: string;
+    groups: { work: string; study: string };
+    items: { kind: 'work' | 'study'; period: string; title: string; place: string; project?: ProjectId }[];
   };
   bench: BenchContent;
   contact: { heading: string; text: string; email: string; github: string; linkedin: string; source: string };
@@ -129,24 +139,25 @@ const en: Content = {
     skills: 'Skills',
     bench: 'LCR‑meter',
     projects: 'Projects',
+    path: 'Background',
     contact: 'Contact',
     language: 'Language',
   },
   hero: {
-    role: 'Electronics engineer: embedded systems, PCB design, sensing for UAVs',
+    role: 'Industrial electronics engineer · embedded systems, PCB design, instrumentation, UAVs',
     intro:
-      'I work on embedded electronics, from the schematic to the firmware: PCBs in KiCad, code on STM32 and ESP32, sensors. My latest projects: an indoor UAV with a LiDAR, an LCR-meter and a high-voltage test bench.',
-    cta: 'See my skills',
+      'Design and validation of embedded electronic systems, from schematic to firmware: multilayer PCBs (KiCad), STM32, ESP32, data-acquisition chains. Recent projects: an indoor UAV with LiDAR mapping, an LCR-meter with simultaneous sampling, a high-voltage test bench.',
+    cta: 'Technical skills',
     demoCaption:
-      'Generated live in your browser: a synthetic 2D LiDAR scan plus altitude, accumulated into a pseudo-3D map. It is the method I used on the UAV project.',
+      'Simulation running in the browser: a synthetic 2D LiDAR scan and altitude accumulated into a pseudo-3D point cloud, following the method used on the UAV project.',
     hint: 'Drag to rotate',
     canvasLabel: 'Interactive point cloud. Drag, or use the arrow keys, to rotate the view.',
     hud: { altitude: 'Altitude', heading: 'Heading', points: 'Points' },
   },
   projects: {
     heading: 'Projects',
-    rail: 'The four projects, with what I did in each.',
-    labels: { period: 'Period', place: 'Where', role: 'Role' },
+    rail: 'Five projects, with the scope of my contribution in each.',
+    labels: { period: 'Period', place: 'Where', role: 'Role', result: 'Outcome' },
     items: [
       {
         id: 'uav',
@@ -157,6 +168,7 @@ const en: Content = {
         role: 'R&D intern, embedded electronics and UAV',
         summary:
           'A low-cost distributed architecture for an indoor quadcopter: sensor acquisition on embedded Linux, a pseudo-3D reconstruction of the environment and a glove for gesture control.',
+        result: '4 of 5 targets met: €269 material cost, 910 g all-up mass, 7 min endurance; sensor-level accuracy of 10–35 mm against a 55 mm target.',
         points: [
           'Designed the PCB of the command glove in KiCad: Seeed XIAO microcontroller, 6-DoF IMU, magnetometer and extra sensors.',
           'Wrote multi-threaded Python on a Raspberry Pi to parse a 2D LiDAR stream at 230400 baud and bridge it over UDP and Wi-Fi.',
@@ -192,6 +204,7 @@ const en: Content = {
         role: 'Hardware and embedded design',
         summary:
           'A measuring instrument designed from scratch around an auto-balanced bridge, with a target error below 1 % on passive components.',
+        result: 'Design target: error below 1 % on impedance, C, L, Q and D, with simultaneous voltage and current sampling.',
         points: [
           'Laid out the PCB in KiCad with a continuous ground plane, strict analog and digital separation and a low-noise symmetrical ±5 V supply.',
           'Moved the core to an ESP32 with two external 16-bit ADCs, so voltage and current are sampled at the same instant and the phase error of multiplexed sampling disappears.',
@@ -227,6 +240,7 @@ const en: Content = {
         role: 'Hardware and embedded design',
         summary:
           'A remote-controlled tracked robot with a 6-axis arm, live video and environmental telemetry, designed and built from end to end.',
+        result: 'Working robot: three-board stack, Raspberry Pi master with ATmega and ESP32-CAM slaves, live video and telemetry.',
         points: [
           'Distributed architecture: a Raspberry Pi as master, ATmega and ESP32-CAM slaves over SPI, I2C and UART.',
           'Routed the mainboard: H-bridge motor drivers, DC/DC converters, Hall-effect current sensing, ultrasonic ranging and battery voltage monitoring.',
@@ -255,6 +269,7 @@ const en: Content = {
         place: 'Hitachi Energy, Jumet (Belgium)',
         role: 'R&D and test-bench intern',
         summary: 'An industrial test bench for the quality control of high-voltage DC capacitors.',
+        result: 'Automated discharge circuit and a VBA macro replacing manual processing of the Fluke measurements.',
         points: [
           'Designed, integrated and wired the electrical cabinet following high-voltage safety rules.',
           'Added an automated discharge circuit so the capacitors are safe to handle after a test.',
@@ -262,19 +277,53 @@ const en: Content = {
           'Used precision Fluke multimeters for very low leakage currents, and wrote a VBA macro in Excel that filters raw measurements into a quality-control sheet.',
         ],
         tags: ['LTspice', 'VBA', 'HVDC', 'Metrology'],
+        figures: [
+          {
+            key: 'hvdcCabinet',
+            alt: 'The HVDC test bench cabinet with resistors, terminal blocks and two capacitors',
+            caption: 'Assembled test bench: safety clearances, passive ripple filtering and a controlled discharge circuit.',
+          },
+        ],
+      },
+      {
+        id: 'fpga',
+        short: 'FPGA game',
+        title: 'FPGA game engine on Intel Cyclone V (VHDL)',
+        period: 'Oct 2025',
+        place: 'HELHA, Mons (coursework, team of three)',
+        role: 'Digital design in VHDL',
+        summary: 'A real-time Flappy Bird-style game running on a DE0-CV board, displayed across six seven-segment displays.',
+        result: 'Timing-clean Quartus implementation at about 155 MHz for a 50 MHz system clock, using about 1 % of the logic resources.',
+        points: [
+          'Co-created eight independent VHDL modules, each with a dedicated test bench.',
+          'Closed timing in Quartus Prime with the TimeQuest Timing Analyzer; the design is built from finite-state machines and combinational and sequential logic.',
+        ],
+        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'FSM', 'Timing analysis'],
         figures: [],
       },
     ],
   },
+  path: {
+    heading: 'Background',
+    rail: 'Industry placements and education.',
+    seeProject: 'See project',
+    groups: { work: 'Experience', study: 'Education' },
+    items: [
+      { kind: 'work', period: 'Dec 2025 – Mar 2026', title: 'R&D intern, embedded electronics and UAV', place: 'National Yunlin University of Science and Technology, Taiwan', project: 'uav' },
+      { kind: 'study', period: '2024 – 2026', title: 'Master’s in Industrial Engineering, Electronics specialisation', place: 'HELHA, Mons' },
+      { kind: 'work', period: 'Sep – Oct 2023', title: 'R&D and test-bench intern', place: 'Hitachi Energy, Jumet', project: 'hvdc' },
+      { kind: 'study', period: '2020 – 2024', title: 'Bachelor’s in Industrial Engineering', place: 'HELHA, Mons' },
+    ],
+  },
   skills: {
-    heading: 'Skills',
-    rail: 'Seven areas, with what I did in each. Pick a project to filter.',
+    heading: 'Technical skills',
+    rail: 'Seven domains and the associated work, filterable by project.',
     filterLabel: 'Filter by project',
     filterAll: 'All projects',
     capabilities: [
       {
         title: 'Mixed-signal PCB design',
-        statement: 'Multilayer boards where analog, digital and power share the same copper.',
+        statement: 'Multilayer boards with analog, digital and power sections on a shared stack-up.',
         evidence: [
           { project: 'lcr', text: 'Continuous ground plane, strict analog/digital separation and a low-noise symmetrical ±5 V supply.' },
           { project: 'robot', text: 'Mainboard with H-bridge motor drivers, DC/DC converters, Hall-effect current sensing and battery monitoring.' },
@@ -284,7 +333,7 @@ const en: Content = {
       },
       {
         title: 'Analog front-ends and measurement',
-        statement: 'Getting a clean, usable voltage out of a component, then checking it on the bench.',
+        statement: 'Signal conditioning, ranging and stage-by-stage validation on the bench.',
         evidence: [
           { project: 'lcr', text: 'MAX4582 multiplexers, INA128 instrumentation amplifiers, a PGA103 programmable-gain amplifier and a multiplying DAC, validated stage by stage on the oscilloscope.' },
           { project: 'hvdc', text: 'Passive RC cascade filters simulated and sized in LTspice; very low leakage currents measured with Fluke precision multimeters.' },
@@ -293,7 +342,7 @@ const en: Content = {
       },
       {
         title: 'Firmware close to the hardware',
-        statement: 'C/C++ on microcontrollers that talk to converters, sensors and other boards.',
+        statement: 'C/C++ firmware on microcontrollers interfacing with ADCs, sensors and peer boards.',
         evidence: [
           { project: 'lcr', text: 'ESP32 core with two external 16-bit ADCs, so voltage and current are sampled at the same instant.' },
           { project: 'robot', text: 'ATmega and ESP32-CAM slaves under a Raspberry Pi master, over SPI, I2C and UART.' },
@@ -302,7 +351,7 @@ const en: Content = {
       },
       {
         title: 'Signal processing and estimation',
-        statement: 'Turning sampled data into amplitude, phase and attitude.',
+        statement: 'Amplitude, phase and attitude estimation from sampled data.',
         evidence: [
           { project: 'lcr', text: 'Amplitude and phase extracted with a DFT; the phase error of multiplexed sampling removed by sampling both channels together.' },
           { project: 'uav', text: 'Kalman and Madgwick filters used for attitude; LiDAR scans synchronised with altitude to build a pseudo-3D map.' },
@@ -311,7 +360,7 @@ const en: Content = {
       },
       {
         title: 'Embedded Linux, data links and dashboards',
-        statement: 'Sensor streams on a Raspberry Pi, sent over the network and shown in real time.',
+        statement: 'Data acquisition under embedded Linux, network transport and real-time visualisation.',
         evidence: [
           { project: 'uav', text: 'Multi-threaded Python on a Raspberry Pi parsing a 2D LiDAR stream at 230400 baud and bridging it over UDP and Wi-Fi.' },
           { project: 'uav', text: 'Real-time 3D telemetry dashboard for the point cloud (PyQtGraph, WebGL, Three.js).' },
@@ -321,7 +370,7 @@ const en: Content = {
       },
       {
         title: 'Autonomous systems and sensing',
-        statement: 'Indoor flight without GPS, and some mechanical design.',
+        statement: 'GPS-denied indoor flight and mechanical sizing.',
         evidence: [
           { project: 'uav', text: 'Indoor flight without GPS, with LiDAR mapping synchronised with altitude.' },
           { project: 'robot', text: 'Centre of gravity and maximum arm payload before tilting computed; motor acceleration profiles shaped.' },
@@ -330,13 +379,13 @@ const en: Content = {
       },
       {
         title: 'Test, validation and safety',
-        statement: 'Showing that a design works, and that it is safe to handle.',
+        statement: 'Design verification and high-voltage safety.',
         evidence: [
           { project: 'hvdc', text: 'Electrical cabinet designed, integrated and wired to high-voltage safety rules, with an automatic discharge circuit.' },
           { project: 'hvdc', text: 'VBA macro that turns raw measurements into a quality-control sheet.' },
           { project: 'lcr', text: 'Board validated stage by stage, including op-amp compatibility problems.' },
         ],
-        tools: ['Hardware-in-the-loop', 'V-model', 'Agile', 'VBA', 'Git/GitHub'],
+        tools: ['Hardware-in-the-loop', 'VBA', 'Git/GitHub'],
       },
     ],
     toolboxTitle: 'Toolbox',
@@ -347,6 +396,7 @@ const en: Content = {
           'Multilayer PCB design and routing (KiCad, Altium)',
           'Signal integrity, EMI/EMC mitigation, IPC standards',
           'Power electronics, HVDC test benches',
+          'FPGA and VHDL (Intel Quartus Prime, Cyclone V), timing analysis',
         ],
       },
       {
@@ -364,8 +414,8 @@ const en: Content = {
       {
         title: 'Software and methods',
         items: [
-          'Python, Java, Bash, VBA, JavaScript',
-          'Git/GitHub, Agile, V-model',
+          'Python, Bash, VBA, JavaScript',
+          'Git/GitHub, oscilloscope and test-bench validation',
           'Oscilloscopes, Fluke precision multimeters',
         ],
       },
@@ -379,11 +429,11 @@ const en: Content = {
     languages: 'French (native), English (fluent)',
   },
   bench: {
-    heading: 'Inside my LCR‑meter',
-    rail: 'The measurement chain on the board, live.',
+    heading: 'LCR‑meter: measurement chain',
+    rail: 'Signal path, from the BNC port to the result.',
     intro:
-      'A signal travels from the BNC port to the result: analog front end, ADC, ESP32, DSP. The screen shows what it looks like at each point. Everything is computed live in the browser.',
-    note: 'The board is a stylised model and the signal path is simplified; the real board is shown beside it. The signals come from a DSP model of the measurement principle running in a Web Worker, not from the instrument’s firmware.',
+      'The excitation signal goes through the analog front end, the ADCs, the ESP32 and the DSP stage. The screen shows the signal at each stage; calculations run live in the browser.',
+    note: 'Stylised board and simplified signal path; the actual board is shown beside it. Signals come from a DSP model of the measurement principle (Web Worker), not from the instrument firmware.',
     canvasLabel:
       '3D model of the LCR-meter board. A red dot follows the signal from the BNC port through the analog front end, the ADC and the ESP32 to the output. Drag or use the arrow keys to rotate.',
     hint: 'Drag to rotate',
@@ -404,7 +454,7 @@ const en: Content = {
   },
   contact: {
     heading: 'Contact',
-    text: 'I’m looking for my first engineering role in embedded systems and electronic integration. The quickest way to reach me is email.',
+    text: 'I am seeking a first engineering position in embedded systems and electronic integration. Preferred contact: email.',
     email: 'Email',
     github: 'GitHub',
     linkedin: 'LinkedIn',
@@ -428,24 +478,25 @@ const fr: Content = {
     skills: 'Compétences',
     bench: 'LCR‑mètre',
     projects: 'Projets',
+    path: 'Parcours',
     contact: 'Contact',
     language: 'Langue',
   },
   hero: {
-    role: 'Ingénieur électronicien : systèmes embarqués, conception de PCB, capteurs pour drones',
+    role: 'Ingénieur industriel en électronique · systèmes embarqués, conception de PCB, instrumentation, drones',
     intro:
-      'Je travaille sur l’électronique embarquée, du schéma au firmware : PCB sous KiCad, code sur STM32 et ESP32, capteurs. Mes derniers projets : un drone d’intérieur avec LiDAR, un LCR-mètre et un banc de test haute tension.',
-    cta: 'Voir mes compétences',
+      'Conception et validation de systèmes électroniques embarqués, du schéma au firmware : PCB multicouches (KiCad), STM32, ESP32, chaînes d’acquisition. Projets récents : drone d’intérieur avec cartographie LiDAR, LCR-mètre à échantillonnage simultané, banc de test haute tension.',
+    cta: 'Compétences techniques',
     demoCaption:
-      'Généré en direct dans le navigateur : un scan LiDAR 2D synthétique plus l’altitude, accumulés en carte pseudo-3D. C’est la méthode que j’ai utilisée sur le projet drone.',
+      'Simulation exécutée dans le navigateur : scan LiDAR 2D synthétique et altitude accumulés en nuage pseudo-3D, selon la méthode utilisée sur le projet drone.',
     hint: 'Glisser pour tourner',
     canvasLabel: 'Nuage de points interactif. Glisser, ou utiliser les flèches du clavier, pour tourner la vue.',
     hud: { altitude: 'Altitude', heading: 'Cap', points: 'Points' },
   },
   projects: {
     heading: 'Projets',
-    rail: 'Les quatre projets, avec ce que j’ai fait dans chacun.',
-    labels: { period: 'Période', place: 'Lieu', role: 'Rôle' },
+    rail: 'Cinq projets, avec le périmètre de ma contribution pour chacun.',
+    labels: { period: 'Période', place: 'Lieu', role: 'Rôle', result: 'Résultat' },
     items: [
       {
         id: 'uav',
@@ -456,6 +507,7 @@ const fr: Content = {
         role: 'Stagiaire R&D, électronique embarquée et drones',
         summary:
           'Une architecture distribuée à bas coût pour un quadricoptère d’intérieur : acquisition des capteurs sous Linux embarqué, reconstruction pseudo-3D de l’environnement et gant de commande gestuelle.',
+        result: '4 objectifs sur 5 atteints : coût matériel de 269 €, masse totale de 910 g, autonomie de 7 min ; précision au niveau capteur de 10 à 35 mm pour une cible de 55 mm.',
         points: [
           'Conception du PCB du gant de commande sous KiCad : microcontrôleur Seeed XIAO, IMU 6 axes, magnétomètre et capteurs supplémentaires.',
           'Scripts Python multi-threads sur Raspberry Pi pour lire un flux LiDAR 2D à 230400 bauds et le relayer en UDP et Wi-Fi.',
@@ -491,6 +543,7 @@ const fr: Content = {
         role: 'Conception hardware et embarquée',
         summary:
           'Un instrument de mesure conçu de zéro autour d’un pont auto-équilibré, avec un objectif d’erreur inférieur à 1 % sur les composants passifs.',
+        result: 'Objectif de conception : erreur inférieure à 1 % sur l’impédance, C, L, Q et D, avec échantillonnage simultané de la tension et du courant.',
         points: [
           'Routage du PCB sous KiCad : plan de masse continu, séparation stricte analogique/numérique et alimentation symétrique ±5 V à faible bruit.',
           'Cœur du système migré vers un ESP32 avec deux CAN 16 bits externes : tension et courant sont échantillonnés au même instant, ce qui supprime l’erreur de phase de l’échantillonnage multiplexé.',
@@ -526,6 +579,7 @@ const fr: Content = {
         role: 'Conception hardware et embarquée',
         summary:
           'Un robot à chenilles télécommandé, avec bras 6 axes, vidéo en direct et télémétrie environnementale, conçu et réalisé de bout en bout.',
+        result: 'Robot fonctionnel : empilement de trois cartes, Raspberry Pi maître avec esclaves ATmega et ESP32-CAM, vidéo et télémétrie en direct.',
         points: [
           'Architecture distribuée : Raspberry Pi maître, esclaves ATmega et ESP32-CAM en SPI, I2C et UART.',
           'Routage de la carte principale : pilotes de moteurs en pont en H, convertisseurs DC/DC, mesure de courant à effet Hall, télémétrie ultrasonique et surveillance de la tension de batterie.',
@@ -554,6 +608,7 @@ const fr: Content = {
         place: 'Hitachi Energy, Jumet (Belgique)',
         role: 'Stagiaire R&D et bancs de test',
         summary: 'Un banc de test industriel pour le contrôle qualité de condensateurs haute tension continue.',
+        result: 'Circuit de décharge automatique et macro VBA remplaçant le traitement manuel des mesures Fluke.',
         points: [
           'Conception, intégration et câblage de l’armoire électrique en respectant les règles de sécurité haute tension.',
           'Circuit de décharge automatique pour que les condensateurs soient sûrs à manipuler après un test.',
@@ -561,19 +616,53 @@ const fr: Content = {
           'Multimètres de précision Fluke pour les très faibles courants de fuite, et macro VBA sous Excel qui filtre les mesures brutes vers une feuille de contrôle qualité.',
         ],
         tags: ['LTspice', 'VBA', 'HVDC', 'Métrologie'],
+        figures: [
+          {
+            key: 'hvdcCabinet',
+            alt: 'L’armoire du banc de test HVDC avec résistances, borniers et deux condensateurs',
+            caption: 'Banc de test assemblé : distances de sécurité, filtrage passif de l’ondulation et circuit de décharge contrôlé.',
+          },
+        ],
+      },
+      {
+        id: 'fpga',
+        short: 'Jeu FPGA',
+        title: 'Moteur de jeu sur FPGA Intel Cyclone V (VHDL)',
+        period: 'oct. 2025',
+        place: 'HELHA, Mons (cours, équipe de trois)',
+        role: 'Conception numérique en VHDL',
+        summary: 'Un jeu temps réel de type Flappy Bird sur une carte DE0-CV, affiché sur six afficheurs sept segments.',
+        result: 'Implémentation Quartus sans violation de timing à environ 155 MHz pour une horloge système de 50 MHz, avec environ 1 % des ressources logiques.',
+        points: [
+          'Conception, en équipe, de huit modules VHDL indépendants, chacun avec son banc de test.',
+          'Fermeture du timing sous Quartus Prime avec le TimeQuest Timing Analyzer ; le design repose sur des machines à états finis et de la logique combinatoire et séquentielle.',
+        ],
+        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'FSM', 'Analyse de timing'],
         figures: [],
       },
     ],
   },
+  path: {
+    heading: 'Parcours',
+    rail: 'Stages en entreprise et formation.',
+    seeProject: 'Voir le projet',
+    groups: { work: 'Expérience', study: 'Formation' },
+    items: [
+      { kind: 'work', period: 'déc. 2025 – mars 2026', title: 'Stagiaire R&D, électronique embarquée et drone', place: 'National Yunlin University of Science and Technology, Taïwan', project: 'uav' },
+      { kind: 'study', period: '2024 – 2026', title: 'Master en sciences de l’ingénieur industriel, orientation électronique', place: 'HELHA, Mons' },
+      { kind: 'work', period: 'sept. – oct. 2023', title: 'Stagiaire R&D et banc de test', place: 'Hitachi Energy, Jumet', project: 'hvdc' },
+      { kind: 'study', period: '2020 – 2024', title: 'Bachelier en sciences de l’ingénieur industriel', place: 'HELHA, Mons' },
+    ],
+  },
   skills: {
-    heading: 'Compétences',
-    rail: 'Sept domaines, avec ce que j’ai fait dans chacun. Choisis un projet pour filtrer.',
+    heading: 'Compétences techniques',
+    rail: 'Sept domaines et les réalisations associées, filtrables par projet.',
     filterLabel: 'Filtrer par projet',
     filterAll: 'Tous les projets',
     capabilities: [
       {
         title: 'Conception de PCB mixtes',
-        statement: 'Des cartes multicouches où analogique, numérique et puissance partagent le même cuivre.',
+        statement: 'Cartes multicouches avec sections analogique, numérique et puissance sur un même empilement.',
         evidence: [
           { project: 'lcr', text: 'Plan de masse continu, séparation stricte analogique/numérique et alimentation symétrique ±5 V à faible bruit.' },
           { project: 'robot', text: 'Carte principale avec pilotes de moteurs en pont en H, convertisseurs DC/DC, mesure de courant à effet Hall et surveillance de la batterie.' },
@@ -583,7 +672,7 @@ const fr: Content = {
       },
       {
         title: 'Étages d’entrée analogiques et mesure',
-        statement: 'Obtenir une tension propre et exploitable à partir d’un composant, puis la vérifier sur le banc.',
+        statement: 'Conditionnement du signal, gestion des gammes et validation étage par étage sur banc.',
         evidence: [
           { project: 'lcr', text: 'Multiplexeurs MAX4582, amplificateurs d’instrumentation INA128, amplificateur à gain programmable PGA103 et CNA multiplicateur, validés étage par étage à l’oscilloscope.' },
           { project: 'hvdc', text: 'Filtres RC passifs en cascade simulés et dimensionnés sous LTspice ; très faibles courants de fuite mesurés avec des multimètres de précision Fluke.' },
@@ -592,7 +681,7 @@ const fr: Content = {
       },
       {
         title: 'Firmware au plus près du matériel',
-        statement: 'Du C/C++ sur des microcontrôleurs qui dialoguent avec des convertisseurs, des capteurs et d’autres cartes.',
+        statement: 'Firmware C/C++ sur microcontrôleurs : interfaçage avec des CAN, des capteurs et des cartes tierces.',
         evidence: [
           { project: 'lcr', text: 'Cœur ESP32 avec deux CAN 16 bits externes : tension et courant sont échantillonnés au même instant.' },
           { project: 'robot', text: 'Esclaves ATmega et ESP32-CAM sous un Raspberry Pi maître, en SPI, I2C et UART.' },
@@ -601,7 +690,7 @@ const fr: Content = {
       },
       {
         title: 'Traitement du signal et estimation',
-        statement: 'Transformer des échantillons en amplitude, en phase et en attitude.',
+        statement: 'Estimation d’amplitude, de phase et d’attitude à partir de données échantillonnées.',
         evidence: [
           { project: 'lcr', text: 'Amplitude et phase extraites par DFT ; erreur de phase de l’échantillonnage multiplexé supprimée en échantillonnant les deux voies ensemble.' },
           { project: 'uav', text: 'Filtres de Kalman et de Madgwick utilisés pour l’attitude ; scans LiDAR synchronisés avec l’altitude pour construire une carte pseudo-3D.' },
@@ -610,7 +699,7 @@ const fr: Content = {
       },
       {
         title: 'Linux embarqué, liaisons de données et tableaux de bord',
-        statement: 'Des flux de capteurs sur Raspberry Pi, envoyés sur le réseau et affichés en temps réel.',
+        statement: 'Acquisition de données sous Linux embarqué, transport réseau et visualisation temps réel.',
         evidence: [
           { project: 'uav', text: 'Python multi-threads sur Raspberry Pi pour lire un flux LiDAR 2D à 230400 bauds et le relayer en UDP et Wi-Fi.' },
           { project: 'uav', text: 'Tableau de bord de télémétrie 3D temps réel pour le nuage de points (PyQtGraph, WebGL, Three.js).' },
@@ -620,7 +709,7 @@ const fr: Content = {
       },
       {
         title: 'Systèmes autonomes et perception',
-        statement: 'Du vol en intérieur sans GPS, et un peu de conception mécanique.',
+        statement: 'Vol en intérieur sans GPS et dimensionnement mécanique.',
         evidence: [
           { project: 'uav', text: 'Vol en intérieur sans GPS, avec cartographie LiDAR synchronisée avec l’altitude.' },
           { project: 'robot', text: 'Calcul du centre de gravité et de la charge maximale du bras avant basculement ; profils d’accélération des moteurs.' },
@@ -629,13 +718,13 @@ const fr: Content = {
       },
       {
         title: 'Test, validation et sécurité',
-        statement: 'Montrer qu’une conception fonctionne, et qu’elle se manipule en sécurité.',
+        statement: 'Vérification de conception et sécurité haute tension.',
         evidence: [
           { project: 'hvdc', text: 'Armoire électrique conçue, intégrée et câblée selon les règles de sécurité haute tension, avec un circuit de décharge automatique.' },
           { project: 'hvdc', text: 'Macro VBA qui transforme les mesures brutes en feuille de contrôle qualité.' },
           { project: 'lcr', text: 'Carte validée étage par étage, y compris des problèmes de compatibilité d’amplificateurs opérationnels.' },
         ],
-        tools: ['Hardware-in-the-loop', 'Cycle en V', 'Agile', 'VBA', 'Git/GitHub'],
+        tools: ['Hardware-in-the-loop', 'VBA', 'Git/GitHub'],
       },
     ],
     toolboxTitle: 'Boîte à outils',
@@ -646,6 +735,7 @@ const fr: Content = {
           'Conception et routage de PCB multicouches (KiCad, Altium)',
           'Intégrité du signal, réduction des perturbations EMI/EMC, normes IPC',
           'Électronique de puissance, bancs de test HVDC',
+          'FPGA et VHDL (Intel Quartus Prime, Cyclone V), analyse de timing',
         ],
       },
       {
@@ -663,8 +753,8 @@ const fr: Content = {
       {
         title: 'Logiciel et méthodes',
         items: [
-          'Python, Java, Bash, VBA, JavaScript',
-          'Git/GitHub, Agile, cycle en V',
+          'Python, Bash, VBA, JavaScript',
+          'Git/GitHub, validation à l’oscilloscope et sur banc de test',
           'Oscilloscopes, multimètres de précision Fluke',
         ],
       },
@@ -678,11 +768,11 @@ const fr: Content = {
     languages: 'Français (langue maternelle), anglais (courant)',
   },
   bench: {
-    heading: 'Dans mon LCR‑mètre',
-    rail: 'La chaîne de mesure sur la carte, en direct.',
+    heading: 'LCR‑mètre : chaîne de mesure',
+    rail: 'Chemin du signal, de la prise BNC au résultat.',
     intro:
-      'Un signal part du port BNC et va jusqu’au résultat : étage analogique, CAN, ESP32, DSP. L’écran montre à quoi il ressemble en chaque point. Tout est calculé en direct dans le navigateur.',
-    note: 'La carte est un modèle stylisé et le chemin du signal est simplifié ; la vraie carte est affichée à côté. Les signaux viennent d’un modèle DSP du principe de mesure, exécuté dans un Web Worker, pas du firmware de l’instrument.',
+      'Le signal d’excitation traverse l’étage analogique, les CAN, l’ESP32 puis le traitement DSP. L’écran affiche le signal à chaque étape ; les calculs sont exécutés en direct dans le navigateur.',
+    note: 'Carte stylisée et chemin du signal simplifié ; la carte réelle est affichée à côté. Les signaux proviennent d’un modèle DSP du principe de mesure (Web Worker), pas du firmware de l’instrument.',
     canvasLabel:
       'Modèle 3D de la carte du LCR-mètre. Un point rouge suit le signal depuis le port BNC, à travers l’étage analogique, le CAN et l’ESP32, jusqu’à la sortie. Glisser ou utiliser les flèches pour tourner.',
     hint: 'Glisser pour tourner',
@@ -703,7 +793,7 @@ const fr: Content = {
   },
   contact: {
     heading: 'Contact',
-    text: 'Je cherche mon premier poste d’ingénieur en systèmes embarqués et intégration électronique. Le plus simple pour me joindre : l’e-mail.',
+    text: 'Je recherche un premier poste d’ingénieur en systèmes embarqués et intégration électronique. Contact de préférence par e-mail.',
     email: 'E-mail',
     github: 'GitHub',
     linkedin: 'LinkedIn',
@@ -727,24 +817,25 @@ const nl: Content = {
     skills: 'Vaardigheden',
     bench: 'LCR‑meter',
     projects: 'Projecten',
+    path: 'Loopbaan',
     contact: 'Contact',
     language: 'Taal',
   },
   hero: {
-    role: 'Elektronica-ingenieur: embedded systemen, PCB-ontwerp, sensoren voor drones',
+    role: 'Industrieel ingenieur elektronica · embedded systemen, PCB-ontwerp, instrumentatie, drones',
     intro:
-      'Ik werk aan embedded elektronica, van schema tot firmware: PCB’s in KiCad, code op STM32 en ESP32, sensoren. Mijn laatste projecten: een indoor-drone met LiDAR, een LCR-meter en een hoogspanningstestbank.',
-    cta: 'Mijn vaardigheden',
+      'Ontwerp en validatie van embedded elektronische systemen, van schema tot firmware: meerlaagse PCB’s (KiCad), STM32, ESP32, meetketens. Recente projecten: een indoor-drone met LiDAR-kartering, een LCR-meter met gelijktijdige bemonstering, een hoogspanningstestbank.',
+    cta: 'Technische vaardigheden',
     demoCaption:
-      'Live gegenereerd in je browser: een synthetische 2D-LiDAR-scan plus hoogte, opgebouwd tot een pseudo-3D-kaart. Dat is de methode die ik in het dronesproject gebruikte.',
+      'Simulatie in de browser: een synthetische 2D-LiDAR-scan en hoogte, opgebouwd tot een pseudo-3D-puntenwolk, volgens de methode van het dronesproject.',
     hint: 'Sleep om te draaien',
     canvasLabel: 'Interactieve puntenwolk. Sleep, of gebruik de pijltjestoetsen, om de weergave te draaien.',
     hud: { altitude: 'Hoogte', heading: 'Koers', points: 'Punten' },
   },
   projects: {
     heading: 'Projecten',
-    rail: 'De vier projecten, met wat ik in elk heb gedaan.',
-    labels: { period: 'Periode', place: 'Waar', role: 'Rol' },
+    rail: 'Vijf projecten, met de omvang van mijn bijdrage per project.',
+    labels: { period: 'Periode', place: 'Waar', role: 'Rol', result: 'Resultaat' },
     items: [
       {
         id: 'uav',
@@ -755,6 +846,7 @@ const nl: Content = {
         role: 'Stagiair R&D, embedded elektronica en drones',
         summary:
           'Een goedkope gedistribueerde architectuur voor een quadcopter voor binnen: sensoracquisitie onder embedded Linux, een pseudo-3D-reconstructie van de omgeving en een handschoen voor gebarenbesturing.',
+        result: '4 van de 5 doelen gehaald: €269 materiaalkosten, 910 g totale massa, 7 min autonomie; nauwkeurigheid op sensorniveau van 10–35 mm bij een doel van 55 mm.',
         points: [
           'Het PCB van de besturingshandschoen ontworpen in KiCad: Seeed XIAO-microcontroller, 6-assige IMU, magnetometer en extra sensoren.',
           'Multithreaded Python op een Raspberry Pi geschreven om een 2D-LiDAR-stroom van 230400 baud te lezen en via UDP en Wi-Fi door te sturen.',
@@ -790,6 +882,7 @@ const nl: Content = {
         role: 'Hardware- en embedded ontwerp',
         summary:
           'Een meetinstrument dat van nul is ontworpen rond een auto-gebalanceerde brug, met als doel een fout onder 1 % op passieve componenten.',
+        result: 'Ontwerpdoel: fout onder 1 % op impedantie, C, L, Q en D, met gelijktijdige bemonstering van spanning en stroom.',
         points: [
           'Het PCB in KiCad geroute met een doorlopend massavlak, strikte scheiding van analoog en digitaal en een ruisarme symmetrische ±5 V-voeding.',
           'De kern naar een ESP32 verplaatst met twee externe 16-bit-ADC’s: spanning en stroom worden op hetzelfde moment bemonsterd, waardoor de fasefout van gemultiplexte bemonstering verdwijnt.',
@@ -825,6 +918,7 @@ const nl: Content = {
         role: 'Hardware- en embedded ontwerp',
         summary:
           'Een op afstand bestuurde rupsrobot met 6-assige arm, livebeeld en omgevingstelemetrie, van begin tot eind ontworpen en gebouwd.',
+        result: 'Werkende robot: stapel van drie printplaten, Raspberry Pi als master met ATmega- en ESP32-CAM-slaves, live video en telemetrie.',
         points: [
           'Gedistribueerde architectuur: een Raspberry Pi als master, ATmega- en ESP32-CAM-slaves via SPI, I2C en UART.',
           'Het hoofdbord geroute: H-brug-motordrivers, DC/DC-omvormers, stroommeting met Hall-sensoren, ultrasone afstandsmeting en bewaking van de accuspanning.',
@@ -853,6 +947,7 @@ const nl: Content = {
         place: 'Hitachi Energy, Jumet (België)',
         role: 'Stagiair R&D en testbanken',
         summary: 'Een industriële testbank voor de kwaliteitscontrole van hoogspannings-gelijkstroomcondensatoren.',
+        result: 'Automatisch ontlaadcircuit en een VBA-macro die de handmatige verwerking van de Fluke-metingen vervangt.',
         points: [
           'De elektrische kast ontworpen, geïntegreerd en bedraad volgens de veiligheidsregels voor hoogspanning.',
           'Een automatische ontlaadschakeling toegevoegd zodat de condensatoren na een test veilig te hanteren zijn.',
@@ -860,19 +955,53 @@ const nl: Content = {
           'Fluke-precisiemultimeters gebruikt voor zeer lage lekstromen, en een VBA-macro in Excel geschreven die ruwe metingen filtert naar een kwaliteitscontroleblad.',
         ],
         tags: ['LTspice', 'VBA', 'HVDC', 'Metrologie'],
+        figures: [
+          {
+            key: 'hvdcCabinet',
+            alt: 'De kast van de HVDC-testbank met weerstanden, klemmen en twee condensatoren',
+            caption: 'Gemonteerde testbank: veiligheidsafstanden, passieve rimpelfiltering en een gecontroleerd ontlaadcircuit.',
+          },
+        ],
+      },
+      {
+        id: 'fpga',
+        short: 'FPGA-spel',
+        title: 'Game-engine op Intel Cyclone V FPGA (VHDL)',
+        period: 'okt. 2025',
+        place: 'HELHA, Mons (opleidingsproject, team van drie)',
+        role: 'Digitaal ontwerp in VHDL',
+        summary: 'Een realtime spel in de stijl van Flappy Bird op een DE0-CV-bord, weergegeven op zes zevensegmentdisplays.',
+        result: 'Quartus-implementatie zonder timingschendingen op ongeveer 155 MHz bij een systeemklok van 50 MHz, met ongeveer 1 % van de logische bronnen.',
+        points: [
+          'Samen acht onafhankelijke VHDL-modules ontworpen, elk met een eigen testbench.',
+          'Timing gesloten in Quartus Prime met de TimeQuest Timing Analyzer; het ontwerp bestaat uit eindige toestandsmachines en combinatorische en sequentiële logica.',
+        ],
+        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'FSM', 'Timinganalyse'],
         figures: [],
       },
     ],
   },
+  path: {
+    heading: 'Loopbaan',
+    rail: 'Stages in het bedrijfsleven en opleiding.',
+    seeProject: 'Bekijk het project',
+    groups: { work: 'Ervaring', study: 'Opleiding' },
+    items: [
+      { kind: 'work', period: 'dec. 2025 – mrt. 2026', title: 'R&D-stagiair, embedded elektronica en drones', place: 'National Yunlin University of Science and Technology, Taiwan', project: 'uav' },
+      { kind: 'study', period: '2024 – 2026', title: 'Master industrieel ingenieur, afstudeerrichting elektronica', place: 'HELHA, Mons' },
+      { kind: 'work', period: 'sept. – okt. 2023', title: 'R&D- en testbankstagiair', place: 'Hitachi Energy, Jumet', project: 'hvdc' },
+      { kind: 'study', period: '2020 – 2024', title: 'Bachelor industrieel ingenieur', place: 'HELHA, Mons' },
+    ],
+  },
   skills: {
-    heading: 'Vaardigheden',
-    rail: 'Zeven domeinen, met wat ik in elk heb gedaan. Kies een project om te filteren.',
+    heading: 'Technische vaardigheden',
+    rail: 'Zeven domeinen met bijbehorend werk, filterbaar per project.',
     filterLabel: 'Filter op project',
     filterAll: 'Alle projecten',
     capabilities: [
       {
         title: 'Ontwerp van mixed-signal PCB’s',
-        statement: 'Meerlaagse borden waar analoog, digitaal en vermogen hetzelfde koper delen.',
+        statement: 'Meerlaagse prints met analoge, digitale en vermogenssecties op dezelfde opbouw.',
         evidence: [
           { project: 'lcr', text: 'Doorlopend massavlak, strikte scheiding van analoog en digitaal en een ruisarme symmetrische ±5 V-voeding.' },
           { project: 'robot', text: 'Hoofdbord met H-brug-motordrivers, DC/DC-omvormers, stroommeting met Hall-sensoren en bewaking van de accu.' },
@@ -882,7 +1011,7 @@ const nl: Content = {
       },
       {
         title: 'Analoge ingangstrappen en metingen',
-        statement: 'Een zuivere, bruikbare spanning uit een component halen en die daarna op de testbank controleren.',
+        statement: 'Signaalconditionering, bereikkeuze en validatie per trap op de testbank.',
         evidence: [
           { project: 'lcr', text: 'MAX4582-multiplexers, INA128-instrumentatieversterkers, een PGA103 met programmeerbare versterking en een multiplying DAC, trap voor trap gevalideerd met de oscilloscoop.' },
           { project: 'hvdc', text: 'Passieve RC-trapfilters gesimuleerd en gedimensioneerd in LTspice; zeer lage lekstromen gemeten met Fluke-precisiemultimeters.' },
@@ -891,7 +1020,7 @@ const nl: Content = {
       },
       {
         title: 'Firmware dicht bij de hardware',
-        statement: 'C/C++ op microcontrollers die praten met omzetters, sensoren en andere borden.',
+        statement: 'C/C++-firmware op microcontrollers met koppeling naar ADC’s, sensoren en andere borden.',
         evidence: [
           { project: 'lcr', text: 'ESP32-kern met twee externe 16-bit-ADC’s: spanning en stroom worden op hetzelfde moment bemonsterd.' },
           { project: 'robot', text: 'ATmega- en ESP32-CAM-slaves onder een Raspberry Pi als master, via SPI, I2C en UART.' },
@@ -900,7 +1029,7 @@ const nl: Content = {
       },
       {
         title: 'Signaalverwerking en schatting',
-        statement: 'Bemonsterde data omzetten in amplitude, fase en standbepaling.',
+        statement: 'Schatting van amplitude, fase en stand uit bemonsterde data.',
         evidence: [
           { project: 'lcr', text: 'Amplitude en fase gehaald uit een DFT; de fasefout van gemultiplexte bemonstering weggewerkt door beide kanalen samen te bemonsteren.' },
           { project: 'uav', text: 'Kalman- en Madgwick-filters gebruikt voor de standbepaling; LiDAR-scans gesynchroniseerd met de hoogte voor een pseudo-3D-kaart.' },
@@ -909,7 +1038,7 @@ const nl: Content = {
       },
       {
         title: 'Embedded Linux, datalinks en dashboards',
-        statement: 'Sensorstromen op een Raspberry Pi, over het netwerk verstuurd en in realtime getoond.',
+        statement: 'Dataverwerving onder embedded Linux, netwerktransport en realtime visualisatie.',
         evidence: [
           { project: 'uav', text: 'Multithreaded Python op een Raspberry Pi om een 2D-LiDAR-stroom van 230400 baud te lezen en via UDP en Wi-Fi door te sturen.' },
           { project: 'uav', text: 'Realtime 3D-telemetriedashboard voor de puntenwolk (PyQtGraph, WebGL, Three.js).' },
@@ -919,7 +1048,7 @@ const nl: Content = {
       },
       {
         title: 'Autonome systemen en waarneming',
-        statement: 'Vliegen binnen zonder GPS, en wat mechanisch ontwerp.',
+        statement: 'Indoor vliegen zonder GPS en mechanische dimensionering.',
         evidence: [
           { project: 'uav', text: 'Vlucht binnen zonder GPS, met LiDAR-kartering gesynchroniseerd met de hoogte.' },
           { project: 'robot', text: 'Zwaartepunt en maximale armlast voor het kantelen berekend; acceleratieprofielen van de motoren afgestemd.' },
@@ -928,13 +1057,13 @@ const nl: Content = {
       },
       {
         title: 'Testen, valideren en veiligheid',
-        statement: 'Aantonen dat een ontwerp werkt en dat het veilig te hanteren is.',
+        statement: 'Ontwerpverificatie en hoogspanningsveiligheid.',
         evidence: [
           { project: 'hvdc', text: 'Elektrische kast ontworpen, geïntegreerd en bedraad volgens de veiligheidsregels voor hoogspanning, met een automatische ontlaadschakeling.' },
           { project: 'hvdc', text: 'VBA-macro die ruwe metingen omzet in een kwaliteitscontroleblad.' },
           { project: 'lcr', text: 'Print trap voor trap gevalideerd, inclusief compatibiliteitsproblemen met operationele versterkers.' },
         ],
-        tools: ['Hardware-in-the-loop', 'V-model', 'Agile', 'VBA', 'Git/GitHub'],
+        tools: ['Hardware-in-the-loop', 'VBA', 'Git/GitHub'],
       },
     ],
     toolboxTitle: 'Gereedschapskist',
@@ -945,6 +1074,7 @@ const nl: Content = {
           'Ontwerp en routing van meerlaagse PCB’s (KiCad, Altium)',
           'Signaalintegriteit, EMI/EMC-beperking, IPC-normen',
           'Vermogenselektronica, HVDC-testbanken',
+          'FPGA en VHDL (Intel Quartus Prime, Cyclone V), timinganalyse',
         ],
       },
       {
@@ -962,8 +1092,8 @@ const nl: Content = {
       {
         title: 'Software en methodes',
         items: [
-          'Python, Java, Bash, VBA, JavaScript',
-          'Git/GitHub, Agile, V-model',
+          'Python, Bash, VBA, JavaScript',
+          'Git/GitHub, validatie met oscilloscoop en testbank',
           'Oscilloscopen, Fluke-precisiemultimeters',
         ],
       },
@@ -977,11 +1107,11 @@ const nl: Content = {
     languages: 'Frans (moedertaal), Engels (vloeiend)',
   },
   bench: {
-    heading: 'In mijn LCR‑meter',
-    rail: 'De meetketen op de print, live.',
+    heading: 'LCR‑meter: meetketen',
+    rail: 'Signaalpad, van de BNC-poort tot het resultaat.',
     intro:
-      'Een signaal gaat van de BNC-poort naar het resultaat: analoge ingangstrap, ADC, ESP32, DSP. Het scherm toont hoe het er op elk punt uitziet. Alles wordt live berekend in de browser.',
-    note: 'De print is een gestileerd model en het signaalpad is vereenvoudigd; het echte bord staat ernaast. De signalen komen uit een DSP-model van het meetprincipe in een Web Worker, niet uit de firmware van het instrument.',
+      'Het aandrijfsignaal doorloopt de analoge ingangstrap, de ADC’s, de ESP32 en de DSP-trap. Het scherm toont het signaal in elke trap; de berekeningen draaien live in de browser.',
+    note: 'Gestileerde print en vereenvoudigd signaalpad; de echte print staat ernaast. De signalen komen uit een DSP-model van het meetprincipe (Web Worker), niet uit de firmware van het instrument.',
     canvasLabel:
       '3D-model van de print van de LCR-meter. Een rode stip volgt het signaal van de BNC-poort via de analoge ingangstrap, de ADC en de ESP32 naar de uitgang. Sleep of gebruik de pijltjestoetsen om te draaien.',
     hint: 'Sleep om te draaien',
@@ -1002,7 +1132,7 @@ const nl: Content = {
   },
   contact: {
     heading: 'Contact',
-    text: 'Ik zoek mijn eerste ingenieursfunctie in embedded systemen en elektronische integratie. Het snelst bereik je me via e-mail.',
+    text: 'Ik zoek een eerste ingenieursfunctie in embedded systemen en elektronische integratie. Contact bij voorkeur via e-mail.',
     email: 'E-mail',
     github: 'GitHub',
     linkedin: 'LinkedIn',

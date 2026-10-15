@@ -2,10 +2,11 @@
  * Réglages personnels du site.
  * `email` et `linkedin` : à renseigner avant publication (laissés vides = lien masqué).
  */
-export const SITE: { name: string; email: string; linkedin: string } = {
+export const SITE: { name: string; email: string; phone: string; linkedin: string } = {
   name: 'Foudil Noah',
-  email: '',
-  linkedin: '',
+  email: 'n.foudil02@proton.me',
+  phone: '+32 472 56 37 14',
+  linkedin: 'https://www.linkedin.com/in/noah-foudil',
 };
 
 if (!SITE.email) {

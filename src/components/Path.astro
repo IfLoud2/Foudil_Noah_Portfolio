@@ -1,0 +1,44 @@
+---
+import { content, type Lang } from '../i18n/content';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = content[lang].path;
+---
+
+<section id="path" class="wrap sheet" aria-labelledby="path-title">
+  <div class="rail">
+    <h2 id="path-title">{t.heading}</h2>
+    <p>{t.rail}</p>
+  </div>
+  <div class="path-groups">
+    {
+      (['work', 'study'] as const).map((kind) => (
+        <div class="path-group">
+          <h3>{t.groups[kind]}</h3>
+          <ol class="timeline">
+            {t.items
+              .filter((item) => item.kind === kind)
+              .map((item) => (
+                <li>
+                  <span class="tl-period">{item.period}</span>
+                  <span class="tl-main">
+                    <span class="tl-title">{item.title}</span>
+                    <span class="tl-place">{item.place}</span>
+                    {item.project && (
+                      <a class="tl-link" href={`#${item.project}`}>
+                        {t.seeProject}
+                      </a>
+                    )}
+                  </span>
+                </li>
+              ))}
+          </ol>
+        </div>
+      ))
+    }
+  </div>
+</section>

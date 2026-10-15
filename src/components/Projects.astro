@@ -10,6 +10,7 @@ import lcr3d from '../assets/lcr-3d.png';
 import lcrPrototype from '../assets/lcr-prototype.png';
 import robotAssembly from '../assets/robot-assembly.png';
 import robotStack from '../assets/robot-pcb-stack.png';
+import hvdcCabinet from '../assets/hvdc-cabinet.png';
 
 interface Props {
   lang: Lang;
@@ -27,10 +28,15 @@ const images: Record<FigureKey, ImageMetadata> = {
   lcrPrototype,
   robotAssembly,
   robotStack,
+  hvdcCabinet,
 };
 
 /** Largeurs générées : jamais au-delà de la taille d'origine. */
 const widthsFor = (img: ImageMetadata): number[] => [...[480, 800, 1200].filter((w) => w < img.width), img.width];
+const cover = (project: { figures: { key: FigureKey }[] }): ImageMetadata | undefined => {
+  const key = project.figures[0]?.key;
+  return key ? images[key] : undefined;
+};
 const isWide = (img: ImageMetadata): boolean => img.width / img.height > 2;
 ---
 
@@ -51,6 +57,23 @@ const isWide = (img: ImageMetadata): boolean => img.width / img.height > 2;
               </span>
             </span>
             <span class="p-sum">{project.summary}</span>
+            <span class="p-result">
+              <span class="p-result-label">{t.labels.result}</span>
+              {project.result}
+            </span>
+            <ul class="tags">{project.tags.map((tag) => <li>{tag}</li>)}</ul>
+            {cover(project) && (
+              <Image
+                class="p-cover"
+                src={cover(project)!}
+                alt=""
+                widths={[320, 480]}
+                sizes="12rem"
+                format="webp"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
           </summary>
           <div class="p-body">
             <dl class="facts">
@@ -62,7 +85,6 @@ const isWide = (img: ImageMetadata): boolean => img.width / img.height > 2;
               <dd>{project.role}</dd>
             </dl>
             <ul class="points">{project.points.map((point) => <li>{point}</li>)}</ul>
-            <ul class="tags">{project.tags.map((tag) => <li>{tag}</li>)}</ul>
             {project.figures.length > 0 && (
               <div class="figs">
                 {project.figures.map((fig) => {

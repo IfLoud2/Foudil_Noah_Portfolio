@@ -1,6 +1,7 @@
 ---
 import { LANGS, content, type Lang } from '../i18n/content';
 import { SITE, url } from '../site';
+import { cvUrl } from '../cv';
 
 interface Props {
   lang: Lang;
@@ -12,8 +13,10 @@ const links = [
   ['skills', t.nav.skills],
   ['bench', t.nav.bench],
   ['projects', t.nav.projects],
+  ['path', t.nav.path],
   ['contact', t.nav.contact],
 ] as const;
+const cv = cvUrl(lang);
 ---
 
 <header class="site-header">
@@ -21,6 +24,7 @@ const links = [
     <a class="brand" href="#top">{SITE.name}</a>
     <nav class="site-nav" aria-label={t.nav.label}>
       {links.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      {cv && <a class="nav-cv" href={cv} download>{content[lang].cv}</a>}
     </nav>
     <ul class="langs" aria-label={t.nav.language}>
       {
