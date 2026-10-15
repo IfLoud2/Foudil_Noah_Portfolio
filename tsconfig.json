@@ -1,0 +1,13 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    // Boucles numériques sur typed arrays (DSP, nuage de points) : l'indexation
+    // vérifiée alourdit le code sans rien apporter, le reste du mode strictest reste actif.
+    "noUncheckedIndexedAccess": false,
+    // Les modules de src/scripts importent avec l'extension .ts pour pouvoir
+    // être testés directement par Node (tests/).
+    "allowImportingTsExtensions": true
+  },
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist", "tests"]
+}

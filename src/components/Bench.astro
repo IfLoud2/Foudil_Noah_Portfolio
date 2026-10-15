@@ -1,0 +1,141 @@
+---
+import { Image } from 'astro:assets';
+import { content, type Lang } from '../i18n/content';
+import lcr3d from '../assets/lcr-3d.png';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const b = content[lang].bench;
+const c = b.controls;
+const ro = b.readout;
+
+// Textes dont le code client a besoin, sérialisés en JSON avec « < » échappé.
+const labels = JSON.stringify({
+  stops: b.stops,
+  captions: b.captions,
+  dut: b.dut,
+  impedance: ro.impedance,
+  phase: ro.phase,
+  value: ro.value,
+  play: c.play,
+  pause: c.pause,
+}).replace(/</g, '\\u003c');
+---
+
+<section id="bench" class="wrap sheet" aria-labelledby="bench-title">
+  <div class="rail">
+    <h2 id="bench-title">{b.heading}</h2>
+    <p>{b.rail}</p>
+  </div>
+  <div class="bench-main">
+    <p class="bench-intro">{b.intro}</p>
+
+    <div class="bench" data-bench>
+      <div class="rig">
+        <div class="pcb-stage">
+          <div class="pcb-view" data-pcb role="img" tabindex="0" aria-label={b.canvasLabel}></div>
+          <p class="drag-hint view-hint" aria-hidden="true">{b.hint}</p>
+          <ol class="stops" aria-label={b.pathLabel}>
+            {
+              b.stops.map((name, i) => (
+                <li>
+                  <button type="button" data-stop={i} aria-label={`${i + 1}. ${name}`}>
+                    <span class="n" aria-hidden="true">{i + 1}</span>
+                    <span class="name">{name}</span>
+                  </button>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+
+        <div class="scope">
+          <div class="scope-head" aria-live="off">
+            <span class="scope-stage" data-scope="stage"></span>
+            <span class="scope-caption" data-scope="caption"></span>
+          </div>
+          <canvas data-scope-cv role="img" aria-label={b.scopeLabel}></canvas>
+          <dl class="readout" data-ready="false">
+            <div>
+              <dt>{ro.impedance}</dt>
+              <dd data-out="z">–</dd>
+            </div>
+            <div>
+              <dt>{ro.phase}</dt>
+              <dd data-out="theta">–</dd>
+            </div>
+            <div>
+              <dt data-out="val-label">{ro.value.C}</dt>
+              <dd data-out="val">–</dd>
+            </div>
+            <div>
+              <dt>{ro.repeat}</dt>
+              <dd data-out="rep">–</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <form class="controls" autocomplete="off" aria-label={ro.caption}>
+        <div class="field">
+          <label for="bench-dut">{c.component}</label>
+          <select id="bench-dut" name="dut">
+            <option value="R">{b.dut.R}</option>
+            <option value="C" selected>{b.dut.C}</option>
+            <option value="L">{b.dut.L}</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="label-row">
+            <label for="bench-freq">{c.frequency}</label>
+            <output for="bench-freq" data-out="freq">1 kHz</output>
+          </div>
+          <input id="bench-freq" name="freq" type="range" min="0" max="100" step="0.5" value="43.5" />
+        </div>
+        <div class="field transport">
+          <button type="button" class="quiet" data-play>{c.pause}</button>
+        </div>
+      </form>
+      <p class="sr-only" aria-live="polite" data-out="sr"></p>
+
+      <div class="bench-foot">
+        <figure class="pcb-real">
+          <a href="#lcr" aria-label={b.real.caption}>
+            <Image src={lcr3d} alt={b.real.alt} widths={[480, 800]} sizes="(min-width: 62rem) 24rem, 90vw" format="webp" loading="lazy" decoding="async" />
+          </a>
+          <figcaption>{b.real.caption}</figcaption>
+        </figure>
+        <p class="bench-note">{b.note}</p>
+      </div>
+      <script is:inline type="application/json" data-bench-labels set:html={labels}></script>
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-bench]');
+  if (root) {
+    const boot = (): void => {
+      import('../scripts/bench.ts')
+        .then((m) => m.startBench(root))
+        .catch(() => root.classList.add('is-static'));
+    };
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            io.disconnect();
+            boot();
+          }
+        },
+        { rootMargin: '300px' },
+      );
+      io.observe(root);
+    } else {
+      boot();
+    }
+  }
+</script>

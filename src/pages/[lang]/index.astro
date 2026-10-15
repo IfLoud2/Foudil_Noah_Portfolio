@@ -1,0 +1,35 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/Header.astro';
+import Hero from '../../components/Hero.astro';
+import Projects from '../../components/Projects.astro';
+import Bench from '../../components/Bench.astro';
+import Skills from '../../components/Skills.astro';
+import Contact from '../../components/Contact.astro';
+import { LANGS, content, type Lang } from '../../i18n/content';
+import { githubOwner } from '../../site';
+
+export const getStaticPaths = (() => LANGS.map((lang) => ({ params: { lang } }))) satisfies GetStaticPaths;
+
+const lang = Astro.params.lang as Lang;
+const t = content[lang];
+const owner = githubOwner(Astro.site);
+---
+
+<Base lang={lang}>
+  <Header lang={lang} />
+  <main id="main">
+    <Hero lang={lang} />
+    <Skills lang={lang} />
+    <Bench lang={lang} />
+    <Projects lang={lang} />
+    <Contact lang={lang} />
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>{t.footer}</p>
+      {owner && <a href={`https://github.com/${owner}/Foudil_Noah_Portfolio`}>{t.contact.source}</a>}
+    </div>
+  </footer>
+</Base>

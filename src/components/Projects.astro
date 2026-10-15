@@ -1,0 +1,106 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { content, type FigureKey, type Lang } from '../i18n/content';
+import uavTelemetry from '../assets/uav-telemetry.png';
+import uavFlight from '../assets/uav-flight.png';
+import uavHardware from '../assets/uav-hardware.png';
+import lcrLayout from '../assets/lcr-layout.png';
+import lcr3d from '../assets/lcr-3d.png';
+import lcrPrototype from '../assets/lcr-prototype.png';
+import robotAssembly from '../assets/robot-assembly.png';
+import robotStack from '../assets/robot-pcb-stack.png';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = content[lang].projects;
+
+const images: Record<FigureKey, ImageMetadata> = {
+  uavTelemetry,
+  uavFlight,
+  uavHardware,
+  lcrLayout,
+  lcr3d,
+  lcrPrototype,
+  robotAssembly,
+  robotStack,
+};
+
+/** Largeurs générées : jamais au-delà de la taille d'origine. */
+const widthsFor = (img: ImageMetadata): number[] => [...[480, 800, 1200].filter((w) => w < img.width), img.width];
+const isWide = (img: ImageMetadata): boolean => img.width / img.height > 2;
+---
+
+<section id="projects" class="wrap sheet" aria-labelledby="projects-title">
+  <div class="rail">
+    <h2 id="projects-title">{t.heading}</h2>
+    <p>{t.rail}</p>
+  </div>
+  <div class="projects-list">
+    {
+      t.items.map((project) => (
+        <details class="project" id={project.id}>
+          <summary>
+            <span class="p-head">
+              <span class="p-title">{project.title}</span>
+              <span class="p-meta">
+                {project.period} · {project.role}
+              </span>
+            </span>
+            <span class="p-sum">{project.summary}</span>
+          </summary>
+          <div class="p-body">
+            <dl class="facts">
+              <dt>{t.labels.period}</dt>
+              <dd>{project.period}</dd>
+              <dt>{t.labels.place}</dt>
+              <dd>{project.place}</dd>
+              <dt>{t.labels.role}</dt>
+              <dd>{project.role}</dd>
+            </dl>
+            <ul class="points">{project.points.map((point) => <li>{point}</li>)}</ul>
+            <ul class="tags">{project.tags.map((tag) => <li>{tag}</li>)}</ul>
+            {project.figures.length > 0 && (
+              <div class="figs">
+                {project.figures.map((fig) => {
+                  const img = images[fig.key];
+                  return (
+                    <figure class:list={['fig', { wide: isWide(img) }]}>
+                      <Image
+                        src={img}
+                        alt={fig.alt}
+                        widths={widthsFor(img)}
+                        sizes="(min-width: 62rem) 40rem, calc(100vw - 2rem)"
+                        format="webp"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <figcaption>{fig.caption}</figcaption>
+                    </figure>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </details>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  // Un lien vers un projet (depuis les preuves de compétences) ouvre aussi son panneau.
+  const openTarget = (id: string): void => {
+    const el = id ? document.getElementById(id) : null;
+    if (el instanceof HTMLDetailsElement) el.open = true;
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
+    if (link) openTarget(link.getAttribute('href')?.slice(1) ?? '');
+  });
+  window.addEventListener('hashchange', () => openTarget(location.hash.slice(1)));
+  openTarget(location.hash.slice(1));
+</script>

@@ -1,0 +1,48 @@
+---
+import { LANGS } from '../i18n/content';
+import { url } from '../site';
+
+// Page d'aiguillage : choisit la langue du navigateur, anglais par défaut.
+const targets = Object.fromEntries(LANGS.map((l) => [l, url(`${l}/`)]));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Foudil Noah</title>
+    <meta name="theme-color" content="#080a12" />
+    <link rel="canonical" href={targets['en']} />
+    <noscript><meta http-equiv="refresh" content={`0; url=${targets['en']}`} /></noscript>
+    <script is:inline define:vars={{ targets }}>
+      var langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
+      var pick = 'en';
+      for (var i = 0; i < langs.length; i++) {
+        var code = String(langs[i]).slice(0, 2).toLowerCase();
+        if (targets[code]) {
+          pick = code;
+          break;
+        }
+      }
+      location.replace(targets[pick]);
+    </script>
+    <style is:global>
+      body {
+        margin: 0;
+        padding: 2rem;
+        background: #080a12;
+        color: #e8ebdd;
+        font-family: system-ui, sans-serif;
+      }
+      a {
+        color: #e0bb62;
+      }
+    </style>
+  </head>
+  <body>
+    <p>
+      {LANGS.map((l, i) => (<>{i > 0 && ' / '}<a href={targets[l]}>{l.toUpperCase()}</a></>))}
+    </p>
+  </body>
+</html>

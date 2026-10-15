@@ -1,0 +1,29 @@
+---
+import { content, type Lang } from '../i18n/content';
+import { SITE, githubOwner } from '../site';
+import { cvUrl } from '../cv';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = content[lang].contact;
+const owner = githubOwner(Astro.site);
+const cv = cvUrl(lang);
+---
+
+<section id="contact" class="wrap sheet" aria-labelledby="contact-title">
+  <div class="rail">
+    <h2 id="contact-title">{t.heading}</h2>
+  </div>
+  <div>
+    <p class="contact-text">{t.text}</p>
+    {SITE.email && <a class="contact-mail" href={`mailto:${SITE.email}`}>{SITE.email}</a>}
+    <div class="contact-links">
+      {owner && <a href={`https://github.com/${owner}`} rel="me">{t.github}</a>}
+      {cv && <a href={cv} download>{content[lang].cv}</a>}
+      {SITE.linkedin && <a href={SITE.linkedin} rel="me">{t.linkedin}</a>}
+    </div>
+  </div>
+</section>

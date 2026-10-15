@@ -1,0 +1,45 @@
+---
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/global.css';
+import { LANGS, content, type Lang } from '../i18n/content';
+import { url } from '../site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = content[lang];
+const abs = (path: string): string => (Astro.site ? new URL(path, Astro.site).href : path);
+const locale: Record<Lang, string> = { en: 'en_US', fr: 'fr_BE', nl: 'nl_BE' };
+---
+
+<!doctype html>
+<html lang={t.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{t.meta.title}</title>
+    <meta name="description" content={t.meta.description} />
+    <meta name="theme-color" content="#080a12" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="canonical" href={abs(url(`${lang}/`))} />
+    {LANGS.map((l) => <link rel="alternate" hreflang={l} href={abs(url(`${l}/`))} />)}
+    <link rel="alternate" hreflang="x-default" href={abs(url('en/'))} />
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={t.meta.title} />
+    <meta property="og:description" content={t.meta.description} />
+    <meta property="og:url" content={abs(url(`${lang}/`))} />
+    <meta property="og:locale" content={locale[lang]} />
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <slot />
+  </body>
+</html>
