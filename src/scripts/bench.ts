@@ -366,9 +366,10 @@ export function startBench(root: HTMLElement): void {
       id: ++seq,
       dut: toDut(dutSel.value),
       freq: sliderToFreq(Number(freqEl.value)),
-      snrDb: 80,
-      bits: 16,
-      multiplexed: false,
+      snrDb: 70,
+      bits: 12,
+      multiplexed: true,
+      compensate: true,
       seed: (Math.random() * 4294967296) >>> 0,
     };
   }

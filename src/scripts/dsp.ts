@@ -35,6 +35,8 @@ export interface AcquireRequest {
   snrDb: number;
   bits: number;
   multiplexed: boolean;
+  /** Si multiplexé : compense par calcul le décalage connu entre V et I (rotation de phase de I). */
+  compensate?: boolean;
   seed: number;
 }
 
@@ -179,7 +181,14 @@ function capture(req: AcquireRequest, seed: number, z: { re: number; im: number 
     i[n] = quantize(AMP * Math.sin(omega * (t + skew) + phi0 - theta) + sigma * gaussian(rand), req.bits);
   }
   const V = dftBin(v, k);
-  const I = dftBin(i, k);
+  let I = dftBin(i, k);
+  if (req.multiplexed && req.compensate) {
+    // Décalage connu de SKEW_S sur I : on retire la rotation de phase omega·skew.
+    const a = -omega * skew;
+    const c = Math.cos(a);
+    const s = Math.sin(a);
+    I = { re: I.re * c - I.im * s, im: I.re * s + I.im * c };
+  }
   const den = I.re * I.re + I.im * I.im;
   return {
     v,

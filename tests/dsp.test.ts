@@ -51,6 +51,12 @@ test('échantillonnage multiplexé : erreur de phase = -360·f·Δt', () => {
   assert.ok(Math.abs(measured - expected) < 0.1, `mesuré ${measured}°, attendu ${expected}°`);
 });
 
+test('échantillonnage multiplexé compensé : phase retrouvée', () => {
+  const sim = acquire(base);
+  const mux = acquire({ ...base, multiplexed: true, compensate: true });
+  assert.ok(Math.abs(phase(mux.zRe, mux.zIm) - phase(sim.zRe, sim.zIm)) < 0.05);
+});
+
 test('moins de bruit => meilleure répétabilité', () => {
   const run = (snrDb: number): number => {
     const xs: number[] = [];
