@@ -17,7 +17,17 @@ export type FigureKey =
   | 'robotStack'
   | 'hvdcCabinet';
 
+export type RoleId = 'emb' | 'hw' | 'test' | 'uav' | 'int';
 export type ProjectId = 'uav' | 'lcr' | 'robot' | 'hvdc' | 'fpga';
+
+export interface HalfCopy {
+  tag: string;
+  title: string;
+  subject: string;
+  text: string;
+  cta: string;
+  alt?: string;
+}
 
 export interface Figure {
   key: FigureKey;
@@ -46,6 +56,8 @@ export interface Capability {
   statement: string;
   /** Preuves : ce que j'ai fait, rattaché au projet où je l'ai fait. */
   evidence: { project: ProjectId; text: string }[];
+  /** Postes pour lesquels cette compétence compte. */
+  roles: RoleId[];
   tools: string[];
 }
 
@@ -82,21 +94,28 @@ export interface Content {
   localeName: string;
   meta: { title: string; description: string };
   skip: string;
-  nav: { label: string; skills: string; bench: string; projects: string; path: string; contact: string; language: string };
+  nav: { label: string; skills: string; bench: string; projects: string; path: string; contact: string; language: string; theme: string };
   hero: {
     role: string;
     intro: string;
     cta: string;
-    demoCaption: string;
+    scroll: string;
+    road: string;
+    hw: HalfCopy;
+    sw: HalfCopy;
     hint: string;
     canvasLabel: string;
     hud: { altitude: string; heading: string; points: string };
+    demoNote: string;
+    stepsLabel: string;
+    steps: string[];
   };
   skills: {
     heading: string;
     rail: string;
     filterLabel: string;
     filterAll: string;
+    roleList: { id: RoleId; label: string }[];
     capabilities: Capability[];
     toolboxTitle: string;
     groups: { title: string; items: string[] }[];
@@ -142,17 +161,23 @@ const en: Content = {
     path: 'Background',
     contact: 'Contact',
     language: 'Language',
+    theme: 'Switch light or dark theme',
   },
   hero: {
     role: 'Industrial electronics engineer · embedded systems, PCB design, instrumentation, UAVs',
     intro:
-      'Design and validation of embedded electronic systems, from schematic to firmware: multilayer PCBs (KiCad), STM32, ESP32, data-acquisition chains. Recent projects: an indoor UAV with LiDAR mapping, an LCR-meter with a DDS source and a 12-bit ADC, an HVDC leakage-current test module.',
+      'Design and validation of embedded electronic systems, from schematic to firmware: multilayer PCBs (KiCad), STM32, ESP32, data-acquisition chains.',
     cta: 'Technical skills',
-    demoCaption:
-      'Simulation running in the browser: a synthetic 2D LiDAR scan and altitude accumulated into a pseudo-3D point cloud, following the method used on the UAV project.',
+    scroll: 'Space or scroll',
+    road: '2020 → 2026',
+    hw: { tag: 'HW', title: 'Hardware', subject: 'LCR-meter · PCB v3', text: 'Mixed-signal board with a DDS source, a 12-bit ADC and an analog chain qualified stage by stage on the bench.', cta: 'See the LCR-meter project', alt: 'KiCad 3D view of the LCR-meter mainboard' },
+    sw: { tag: 'SW', title: 'Software', subject: 'Indoor UAV · LiDAR mapping', text: 'asyncio acquisition on a Raspberry Pi, EKF3 attitude from the flight controller, pseudo-3D map in the browser. Live simulation.', cta: 'See the UAV project' },
     hint: 'Drag to rotate',
     canvasLabel: 'Interactive point cloud. Drag, or use the arrow keys, to rotate the view.',
     hud: { altitude: 'Altitude', heading: 'Heading', points: 'Points' },
+    demoNote: 'Stylised board and simplified signal path. Signals come from a DSP model of the measurement (12-bit ADC, about 70 dB SNR), not from measurements: the firmware is not written yet.',
+    stepsLabel: 'Story steps',
+    steps: ['Intro', 'HW | SW', 'Hardware', 'Path', 'Software'],
   },
   projects: {
     heading: 'Projects',
@@ -289,13 +314,19 @@ const en: Content = {
         period: 'Oct 2025',
         place: 'HELHA, Mons (coursework, team of three)',
         role: 'Digital design in VHDL',
-        summary: 'A real-time Flappy Bird-style game running on a DE0-CV board, displayed across six seven-segment displays.',
-        result: 'Timing-clean Quartus implementation at about 155 MHz for a 50 MHz system clock, using about 1 % of the logic resources.',
+        summary:
+          'A simplified Flappy Bird on a DE0-CV board (Cyclone V): walls scroll across six seven-segment displays, the bird sits on the rightmost one, two buttons move it, switches select one of three difficulties and the LEDs show the game state.',
+        result: 'Synthesised in Quartus Prime Lite: 201 logic elements out of 18,480 (about 1 %), no RAM or DSP blocks. Worst-case setup slack of +13.6 ns at 50 MHz (equivalent Fmax about 155 MHz), hold slack positive.',
         points: [
-          'Co-created eight independent VHDL modules, each with a dedicated test bench.',
-          'Closed timing in Quartus Prime with the TimeQuest Timing Analyzer; the design is built from finite-state machines and combinational and sequential logic.',
+          'Game flow as a four-state FSM (OFF, MENU, RUNNING, GAME OVER): SW3 powers the game, SW0 to SW2 select the difficulty (the hardest wins if several are set), a button starts the game, and a collision freezes the display and lights the Game Over LED.',
+          'Walls come from one 60-bit circular shift register per difficulty (2 bits per step, four vertical positions); difficulty changes the scroll speed, the gap sizes and the number of top/bottom transitions.',
+          'Debounced button inputs that produce one-clock-cycle pulses (up, down, start, reset), and a clock-enable generator that sets the scroll rate for each difficulty.',
+          'Collision detection reuses the display signals: bird and wall segments active together, filtered by a consecutive-cycle counter and a cooldown to avoid repeated detections.',
+          'Eight independent VHDL modules, each simulated with its own test bench (waveform checks and assertions).',
+          'Static timing analysis in TimeQuest at the slow 85 °C and fast 0 °C corners; the critical paths sit in the clock divider, the FSM and the wall comparators.',
+          'Improvements identified: a score display, an extra difficulty level and a best-score register.',
         ],
-        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'FSM', 'Timing analysis'],
+        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'DE0-CV', 'FSM', 'Test benches', 'Timing analysis'],
         figures: [],
       },
     ],
@@ -314,12 +345,20 @@ const en: Content = {
   },
   skills: {
     heading: 'Technical skills',
-    rail: 'Seven domains and the associated work, filterable by project.',
-    filterLabel: 'Filter by project',
-    filterAll: 'All projects',
+    rail: 'Seven domains and the associated work, filterable by the role they support.',
+    filterLabel: 'Target roles',
+    filterAll: 'All roles',
+    roleList: [
+      { id: 'emb', label: 'Embedded systems engineer' },
+      { id: 'hw', label: 'Hardware / PCB design engineer' },
+      { id: 'test', label: 'Test and validation engineer' },
+      { id: 'uav', label: 'UAV / avionics engineer' },
+      { id: 'int', label: 'Systems integration engineer' },
+    ],
     capabilities: [
       {
         title: 'Mixed-signal PCB design',
+        roles: ['hw', 'int'],
         statement: 'Multilayer boards with analog, digital and power sections on a shared stack-up.',
         evidence: [
           { project: 'lcr', text: 'Continuous ground plane, strict analog/digital separation and a low-noise symmetrical ±5 V supply.' },
@@ -330,6 +369,7 @@ const en: Content = {
       },
       {
         title: 'Analog front-ends and measurement',
+        roles: ['hw', 'test'],
         statement: 'Signal conditioning, ranging and stage-by-stage validation on the bench.',
         evidence: [
           { project: 'lcr', text: 'MAX4582 and MAX4052 multiplexers, INA128 instrumentation amplifier, PGA103 programmable-gain amplifier and a DAC8811 multiplying DAC, qualified stage by stage on the oscilloscope.' },
@@ -339,6 +379,7 @@ const en: Content = {
       },
       {
         title: 'Firmware close to the hardware',
+        roles: ['emb', 'uav', 'int'],
         statement: 'C/C++ firmware on microcontrollers interfacing with ADCs, sensors and peer boards.',
         evidence: [
           { project: 'lcr', text: 'ESP32 with an external 12-bit AD7450 ADC chosen for its linearity; firmware still to be written.' },
@@ -348,6 +389,7 @@ const en: Content = {
       },
       {
         title: 'Signal processing and estimation',
+        roles: ['emb', 'uav', 'test'],
         statement: 'Amplitude, phase and attitude estimation from sampled data.',
         evidence: [
           { project: 'lcr', text: 'Amplitude and phase extraction by DFT with coherent sampling; the hardware chain has not yet been measured end to end.' },
@@ -357,6 +399,7 @@ const en: Content = {
       },
       {
         title: 'Embedded Linux, data links and dashboards',
+        roles: ['emb', 'uav', 'int'],
         statement: 'Data acquisition under embedded Linux, network transport and real-time visualisation.',
         evidence: [
           { project: 'uav', text: 'asyncio Python on a Raspberry Pi Zero 2W parsing an LD19 LiDAR stream at 230400 baud (CRC8) and broadcasting it over WebSocket.' },
@@ -367,6 +410,7 @@ const en: Content = {
       },
       {
         title: 'Autonomous systems and sensing',
+        roles: ['uav', 'emb', 'int'],
         statement: 'GPS-denied indoor flight and mechanical sizing.',
         evidence: [
           { project: 'uav', text: 'Indoor flight without GPS: LiDAR and ToF altitude combined with MAVLink attitude.' },
@@ -376,6 +420,7 @@ const en: Content = {
       },
       {
         title: 'Test, validation and safety',
+        roles: ['test', 'uav', 'int'],
         statement: 'Design verification and high-voltage safety.',
         evidence: [
           { project: 'hvdc', text: 'Safety circuit designed for a 5 kV test: emergency stop, contactors and automatic discharge (design stage, not completed).' },
@@ -429,7 +474,7 @@ const en: Content = {
     heading: 'LCR‑meter: measurement chain',
     rail: 'Signal path, from the BNC port to the result.',
     intro:
-      'The excitation signal goes through the analog front end, the 12-bit ADC (voltage and current are acquired in turn through the same converter), the ESP32 and the DSP stage. The screen shows the signal at each stage; calculations run live in the browser.',
+      'From the BNC port to the result: analog front end, 12-bit ADC, ESP32 and DSP. The screen shows the signal at each stage.',
     note: 'Stylised board and simplified signal path; the actual board is shown beside it. Signals come from a DSP model of the measurement principle (12-bit ADC, about 70 dB SNR, known V/I offset compensated), not from measurements or instrument firmware: the firmware is not written yet.',
     canvasLabel:
       '3D model of the LCR-meter board. A red dot follows the signal from the BNC port through the analog front end, the ADC and the ESP32 to the output. Drag or use the arrow keys to rotate.',
@@ -458,7 +503,7 @@ const en: Content = {
     source: 'Source code of this site',
   },
   cv: 'Download my CV (PDF)',
-  footer: 'Built with Astro and Three.js. No tracking, no cookies.',
+  footer: 'Built with Astro and Three.js. Anonymous visit statistics (GoatCounter), no cookies.',
 };
 
 const fr: Content = {
@@ -478,17 +523,23 @@ const fr: Content = {
     path: 'Parcours',
     contact: 'Contact',
     language: 'Langue',
+    theme: 'Basculer entre thème clair et sombre',
   },
   hero: {
     role: 'Ingénieur industriel en électronique · systèmes embarqués, conception de PCB, instrumentation, drones',
     intro:
-      'Conception et validation de systèmes électroniques embarqués, du schéma au firmware : PCB multicouches (KiCad), STM32, ESP32, chaînes d’acquisition. Projets récents : drone d’intérieur avec cartographie LiDAR, LCR-mètre à source DDS et CAN 12 bits, module de test de courant de fuite HVDC.',
+      'Conception et validation de systèmes électroniques embarqués, du schéma au firmware : PCB multicouches (KiCad), STM32, ESP32, chaînes d’acquisition.',
     cta: 'Compétences techniques',
-    demoCaption:
-      'Simulation exécutée dans le navigateur : scan LiDAR 2D synthétique et altitude accumulés en nuage pseudo-3D, selon la méthode utilisée sur le projet drone.',
+    scroll: 'Espace ou défiler',
+    road: '2020 → 2026',
+    hw: { tag: 'HW', title: 'Hardware', subject: 'LCR-mètre · PCB v3', text: 'Carte mixte avec source DDS, CAN 12 bits et chaîne analogique qualifiée étage par étage au banc.', cta: 'Voir le projet LCR-mètre', alt: 'Vue 3D KiCad de la carte principale du LCR-mètre' },
+    sw: { tag: 'SW', title: 'Software', subject: 'Drone d’intérieur · cartographie LiDAR', text: 'Acquisition asyncio sur Raspberry Pi, attitude EKF3 du contrôleur de vol, carte pseudo-3D dans le navigateur. Simulation en direct.', cta: 'Voir le projet drone' },
     hint: 'Glisser pour tourner',
     canvasLabel: 'Nuage de points interactif. Glisser, ou utiliser les flèches du clavier, pour tourner la vue.',
     hud: { altitude: 'Altitude', heading: 'Cap', points: 'Points' },
+    demoNote: 'Carte stylisée et chemin simplifié. Les signaux viennent d’un modèle DSP de la mesure (CAN 12 bits, SNR d’environ 70 dB), pas de mesures : le firmware n’est pas encore écrit.',
+    stepsLabel: 'Étapes du récit',
+    steps: ['Intro', 'HW | SW', 'Hardware', 'Parcours', 'Software'],
   },
   projects: {
     heading: 'Projets',
@@ -625,13 +676,19 @@ const fr: Content = {
         period: 'oct. 2025',
         place: 'HELHA, Mons (cours, équipe de trois)',
         role: 'Conception numérique en VHDL',
-        summary: 'Un jeu temps réel de type Flappy Bird sur une carte DE0-CV, affiché sur six afficheurs sept segments.',
-        result: 'Implémentation Quartus sans violation de timing à environ 155 MHz pour une horloge système de 50 MHz, avec environ 1 % des ressources logiques.',
+        summary:
+          'Un Flappy Bird simplifié sur carte DE0-CV (Cyclone V) : les murs défilent sur six afficheurs sept segments, l’oiseau occupe celui de droite, deux boutons le déplacent, des switchs choisissent l’une des trois difficultés et les LEDs indiquent l’état du jeu.',
+        result: 'Synthèse sous Quartus Prime Lite : 201 éléments logiques sur 18 480 (environ 1 %), ni RAM ni blocs DSP. Marge de setup au pire cas de +13,6 ns à 50 MHz (Fmax équivalente d’environ 155 MHz), marge de hold positive.',
         points: [
-          'Conception, en équipe, de huit modules VHDL indépendants, chacun avec son banc de test.',
-          'Fermeture du timing sous Quartus Prime avec le TimeQuest Timing Analyzer ; le design repose sur des machines à états finis et de la logique combinatoire et séquentielle.',
+          'Déroulement du jeu en FSM à quatre états (OFF, MENU, RUNNING, GAME OVER) : SW3 allume le jeu, SW0 à SW2 choisissent la difficulté (la plus haute l’emporte si plusieurs sont actifs), un bouton lance la partie, une collision fige l’affichage et allume la LED Game Over.',
+          'Murs produits par un registre à décalage circulaire de 60 bits par difficulté (2 bits par pas, quatre positions verticales) ; la difficulté modifie la vitesse de défilement, la taille des ouvertures et le nombre de transitions haut/bas.',
+          'Entrées boutons avec anti-rebond produisant des impulsions d’un cycle d’horloge (haut, bas, start, reset), et générateur de clock enable qui fixe la cadence de défilement selon la difficulté.',
+          'Détection de collision qui réutilise les signaux d’affichage : segments de l’oiseau et d’un mur actifs ensemble, filtrés par un compteur de cycles consécutifs et un cooldown pour éviter les détections multiples.',
+          'Huit modules VHDL indépendants, chacun simulé avec son propre testbench (vérification des chronogrammes et assertions).',
+          'Analyse de timing statique sous TimeQuest aux coins lent 85 °C et rapide 0 °C ; les chemins critiques se trouvent dans le diviseur d’horloge, la FSM et les comparateurs de murs.',
+          'Améliorations identifiées : affichage du score, niveau de difficulté supplémentaire et registre du meilleur score.',
         ],
-        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'FSM', 'Analyse de timing'],
+        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'DE0-CV', 'FSM', 'Testbenchs', 'Analyse de timing'],
         figures: [],
       },
     ],
@@ -650,12 +707,20 @@ const fr: Content = {
   },
   skills: {
     heading: 'Compétences techniques',
-    rail: 'Sept domaines et les réalisations associées, filtrables par projet.',
-    filterLabel: 'Filtrer par projet',
-    filterAll: 'Tous les projets',
+    rail: 'Sept domaines et les réalisations associées, filtrables selon le poste visé.',
+    filterLabel: 'Postes visés',
+    filterAll: 'Tous les postes',
+    roleList: [
+      { id: 'emb', label: 'Ingénieur systèmes embarqués' },
+      { id: 'hw', label: 'Ingénieur hardware · conception PCB' },
+      { id: 'test', label: 'Ingénieur test et validation' },
+      { id: 'uav', label: 'Ingénieur drones · avionique' },
+      { id: 'int', label: 'Ingénieur intégration système' },
+    ],
     capabilities: [
       {
         title: 'Conception de PCB mixtes',
+        roles: ['hw', 'int'],
         statement: 'Cartes multicouches avec sections analogique, numérique et puissance sur un même empilement.',
         evidence: [
           { project: 'lcr', text: 'Plan de masse continu, séparation stricte analogique/numérique et alimentation symétrique ±5 V à faible bruit.' },
@@ -666,6 +731,7 @@ const fr: Content = {
       },
       {
         title: 'Étages d’entrée analogiques et mesure',
+        roles: ['hw', 'test'],
         statement: 'Conditionnement du signal, gestion des gammes et validation étage par étage sur banc.',
         evidence: [
           { project: 'lcr', text: 'Multiplexeurs MAX4582 et MAX4052, amplificateur d’instrumentation INA128, amplificateur à gain programmable PGA103 et CNA multiplicateur DAC8811, qualifiés étage par étage à l’oscilloscope.' },
@@ -675,6 +741,7 @@ const fr: Content = {
       },
       {
         title: 'Firmware au plus près du matériel',
+        roles: ['emb', 'uav', 'int'],
         statement: 'Firmware C/C++ sur microcontrôleurs : interfaçage avec des CAN, des capteurs et des cartes tierces.',
         evidence: [
           { project: 'lcr', text: 'ESP32 avec CAN externe AD7450 12 bits choisi pour sa linéarité ; firmware encore à écrire.' },
@@ -684,6 +751,7 @@ const fr: Content = {
       },
       {
         title: 'Traitement du signal et estimation',
+        roles: ['emb', 'uav', 'test'],
         statement: 'Estimation d’amplitude, de phase et d’attitude à partir de données échantillonnées.',
         evidence: [
           { project: 'lcr', text: 'Extraction de l’amplitude et de la phase par DFT avec échantillonnage cohérent ; la chaîne matérielle n’a pas encore été mesurée de bout en bout.' },
@@ -693,6 +761,7 @@ const fr: Content = {
       },
       {
         title: 'Linux embarqué, liaisons de données et tableaux de bord',
+        roles: ['emb', 'uav', 'int'],
         statement: 'Acquisition de données sous Linux embarqué, transport réseau et visualisation temps réel.',
         evidence: [
           { project: 'uav', text: 'Python asyncio sur Raspberry Pi Zero 2W pour lire un flux LiDAR LD19 à 230400 bauds (CRC8) et le diffuser en WebSocket.' },
@@ -703,6 +772,7 @@ const fr: Content = {
       },
       {
         title: 'Systèmes autonomes et perception',
+        roles: ['uav', 'emb', 'int'],
         statement: 'Vol en intérieur sans GPS et dimensionnement mécanique.',
         evidence: [
           { project: 'uav', text: 'Vol en intérieur sans GPS : LiDAR et altitude ToF combinés à l’attitude MAVLink.' },
@@ -712,6 +782,7 @@ const fr: Content = {
       },
       {
         title: 'Test, validation et sécurité',
+        roles: ['test', 'uav', 'int'],
         statement: 'Vérification de conception et sécurité haute tension.',
         evidence: [
           { project: 'hvdc', text: 'Circuit de sécurité conçu pour un test à 5 kV : arrêt d’urgence, contacteurs et décharge automatique (stade conception, non terminé).' },
@@ -765,7 +836,7 @@ const fr: Content = {
     heading: 'LCR‑mètre : chaîne de mesure',
     rail: 'Chemin du signal, de la prise BNC au résultat.',
     intro:
-      'Le signal d’excitation traverse l’étage analogique, le CAN 12 bits (tension et courant sont acquis tour à tour par le même convertisseur), l’ESP32 puis le traitement DSP. L’écran affiche le signal à chaque étape ; les calculs sont exécutés en direct dans le navigateur.',
+      'De la prise BNC au résultat : étage analogique, CAN 12 bits, ESP32 et DSP. L’écran affiche le signal à chaque étape.',
     note: 'Carte stylisée et chemin du signal simplifié ; la carte réelle est affichée à côté. Les signaux proviennent d’un modèle DSP du principe de mesure (CAN 12 bits, SNR d’environ 70 dB, décalage V/I connu et compensé), et non de mesures ou du firmware de l’instrument : celui-ci n’est pas encore écrit.',
     canvasLabel:
       'Modèle 3D de la carte du LCR-mètre. Un point rouge suit le signal depuis le port BNC, à travers l’étage analogique, le CAN et l’ESP32, jusqu’à la sortie. Glisser ou utiliser les flèches pour tourner.',
@@ -794,7 +865,7 @@ const fr: Content = {
     source: 'Code source de ce site',
   },
   cv: 'Télécharger mon CV (PDF)',
-  footer: 'Réalisé avec Astro et Three.js. Aucun suivi, aucun cookie.',
+  footer: 'Réalisé avec Astro et Three.js. Statistiques de visite anonymes (GoatCounter), aucun cookie.',
 };
 
 const nl: Content = {
@@ -814,17 +885,23 @@ const nl: Content = {
     path: 'Loopbaan',
     contact: 'Contact',
     language: 'Taal',
+    theme: 'Wisselen tussen licht en donker thema',
   },
   hero: {
     role: 'Industrieel ingenieur elektronica · embedded systemen, PCB-ontwerp, instrumentatie, drones',
     intro:
-      'Ontwerp en validatie van embedded elektronische systemen, van schema tot firmware: meerlaagse PCB’s (KiCad), STM32, ESP32, meetketens. Recente projecten: een indoor-drone met LiDAR-kartering, een LCR-meter met DDS-bron en 12-bit-ADC, een testmodule voor lekstroom bij HVDC.',
+      'Ontwerp en validatie van embedded elektronische systemen, van schema tot firmware: meerlaagse PCB’s (KiCad), STM32, ESP32, meetketens.',
     cta: 'Technische vaardigheden',
-    demoCaption:
-      'Simulatie in de browser: een synthetische 2D-LiDAR-scan en hoogte, opgebouwd tot een pseudo-3D-puntenwolk, volgens de methode van het dronesproject.',
+    scroll: 'Spatie of scroll',
+    road: '2020 → 2026',
+    hw: { tag: 'HW', title: 'Hardware', subject: 'LCR-meter · PCB v3', text: 'Mixed-signal-print met DDS-bron, 12-bit-ADC en een analoge keten die trap voor trap op de testbank is gekwalificeerd.', cta: 'Bekijk het LCR-meterproject', alt: 'KiCad 3D-weergave van de hoofdprint van de LCR-meter' },
+    sw: { tag: 'SW', title: 'Software', subject: 'Indoor-drone · LiDAR-kartering', text: 'asyncio-acquisitie op een Raspberry Pi, EKF3-stand van de flight controller, pseudo-3D-kaart in de browser. Live simulatie.', cta: 'Bekijk het dronproject' },
     hint: 'Sleep om te draaien',
     canvasLabel: 'Interactieve puntenwolk. Sleep, of gebruik de pijltjestoetsen, om de weergave te draaien.',
     hud: { altitude: 'Hoogte', heading: 'Koers', points: 'Punten' },
+    demoNote: 'Gestileerde print en vereenvoudigd pad. De signalen komen uit een DSP-model van de meting (12-bit-ADC, SNR van ongeveer 70 dB), niet uit metingen: de firmware is nog niet geschreven.',
+    stepsLabel: 'Stappen van het verhaal',
+    steps: ['Intro', 'HW | SW', 'Hardware', 'Traject', 'Software'],
   },
   projects: {
     heading: 'Projecten',
@@ -961,13 +1038,19 @@ const nl: Content = {
         period: 'okt. 2025',
         place: 'HELHA, Mons (opleidingsproject, team van drie)',
         role: 'Digitaal ontwerp in VHDL',
-        summary: 'Een realtime spel in de stijl van Flappy Bird op een DE0-CV-bord, weergegeven op zes zevensegmentdisplays.',
-        result: 'Quartus-implementatie zonder timingschendingen op ongeveer 155 MHz bij een systeemklok van 50 MHz, met ongeveer 1 % van de logische bronnen.',
+        summary:
+          'Een vereenvoudigde Flappy Bird op een DE0-CV-bord (Cyclone V): muren schuiven over zes zevensegmentdisplays, de vogel staat op de meest rechtse, twee knoppen bewegen hem, schakelaars kiezen een van drie moeilijkheidsgraden en de LED’s tonen de spelstatus.',
+        result: 'Gesynthetiseerd in Quartus Prime Lite: 201 logische elementen van 18.480 (ongeveer 1 %), geen RAM of DSP-blokken. Setup-marge in het slechtste geval +13,6 ns bij 50 MHz (equivalente Fmax ongeveer 155 MHz), positieve hold-marge.',
         points: [
-          'Samen acht onafhankelijke VHDL-modules ontworpen, elk met een eigen testbench.',
-          'Timing gesloten in Quartus Prime met de TimeQuest Timing Analyzer; het ontwerp bestaat uit eindige toestandsmachines en combinatorische en sequentiële logica.',
+          'Spelverloop als FSM met vier toestanden (OFF, MENU, RUNNING, GAME OVER): SW3 schakelt het spel in, SW0 tot SW2 kiezen de moeilijkheid (de hoogste wint als er meerdere aanstaan), een knop start het spel en een botsing bevriest het scherm en laat de Game Over-LED branden.',
+          'Muren komen uit een cyclisch schuifregister van 60 bits per moeilijkheid (2 bits per stap, vier verticale posities); de moeilijkheid bepaalt de scrollsnelheid, de grootte van de openingen en het aantal wissels boven/onder.',
+          'Ontdenderde knopingangen die pulsen van één klokcyclus geven (omhoog, omlaag, start, reset), en een clock-enable-generator die de scrollsnelheid per moeilijkheid instelt.',
+          'Botsingsdetectie hergebruikt de displaysignalen: segmenten van vogel en muur tegelijk actief, gefilterd met een teller van opeenvolgende cycli en een cooldown tegen herhaalde detecties.',
+          'Acht onafhankelijke VHDL-modules, elk gesimuleerd met een eigen testbench (controle van golfvormen en assertions).',
+          'Statische timinganalyse in TimeQuest in de trage 85 °C- en snelle 0 °C-hoek; de kritieke paden zitten in de klokdeler, de FSM en de muurcomparatoren.',
+          'Geïdentificeerde verbeteringen: scoreweergave, een extra moeilijkheidsgraad en een register voor de beste score.',
         ],
-        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'FSM', 'Timinganalyse'],
+        tags: ['VHDL', 'Quartus Prime', 'Cyclone V', 'DE0-CV', 'FSM', 'Testbenches', 'Timinganalyse'],
         figures: [],
       },
     ],
@@ -986,12 +1069,20 @@ const nl: Content = {
   },
   skills: {
     heading: 'Technische vaardigheden',
-    rail: 'Zeven domeinen met bijbehorend werk, filterbaar per project.',
-    filterLabel: 'Filter op project',
-    filterAll: 'Alle projecten',
+    rail: 'Zeven domeinen met bijbehorend werk, filterbaar per beoogde functie.',
+    filterLabel: 'Beoogde functies',
+    filterAll: 'Alle functies',
+    roleList: [
+      { id: 'emb', label: 'Embedded-systemenengineer' },
+      { id: 'hw', label: 'Hardware- / PCB-ontwerper' },
+      { id: 'test', label: 'Test- en validatie-engineer' },
+      { id: 'uav', label: 'Drone- / avionica-engineer' },
+      { id: 'int', label: 'Systeemintegratie-engineer' },
+    ],
     capabilities: [
       {
         title: 'Ontwerp van mixed-signal PCB’s',
+        roles: ['hw', 'int'],
         statement: 'Meerlaagse prints met analoge, digitale en vermogenssecties op dezelfde opbouw.',
         evidence: [
           { project: 'lcr', text: 'Doorlopend massavlak, strikte scheiding van analoog en digitaal en een ruisarme symmetrische ±5 V-voeding.' },
@@ -1002,6 +1093,7 @@ const nl: Content = {
       },
       {
         title: 'Analoge ingangstrappen en metingen',
+        roles: ['hw', 'test'],
         statement: 'Signaalconditionering, bereikkeuze en validatie per trap op de testbank.',
         evidence: [
           { project: 'lcr', text: 'MAX4582- en MAX4052-multiplexers, INA128-instrumentatieversterker, PGA103 met programmeerbare versterking en een DAC8811 als vermenigvuldigende DAC, trap voor trap gekwalificeerd met de oscilloscoop.' },
@@ -1011,6 +1103,7 @@ const nl: Content = {
       },
       {
         title: 'Firmware dicht bij de hardware',
+        roles: ['emb', 'uav', 'int'],
         statement: 'C/C++-firmware op microcontrollers met koppeling naar ADC’s, sensoren en andere borden.',
         evidence: [
           { project: 'lcr', text: 'ESP32 met een externe 12-bit AD7450-ADC, gekozen om zijn lineariteit; firmware nog te schrijven.' },
@@ -1020,6 +1113,7 @@ const nl: Content = {
       },
       {
         title: 'Signaalverwerking en schatting',
+        roles: ['emb', 'uav', 'test'],
         statement: 'Schatting van amplitude, fase en stand uit bemonsterde data.',
         evidence: [
           { project: 'lcr', text: 'Extractie van amplitude en fase met een DFT en coherente bemonstering; de hardwareketen is nog niet end-to-end gemeten.' },
@@ -1029,6 +1123,7 @@ const nl: Content = {
       },
       {
         title: 'Embedded Linux, datalinks en dashboards',
+        roles: ['emb', 'uav', 'int'],
         statement: 'Dataverwerving onder embedded Linux, netwerktransport en realtime visualisatie.',
         evidence: [
           { project: 'uav', text: 'asyncio-Python op een Raspberry Pi Zero 2W die een LD19-LiDAR-stroom van 230400 baud (CRC8) leest en via WebSocket doorstuurt.' },
@@ -1039,6 +1134,7 @@ const nl: Content = {
       },
       {
         title: 'Autonome systemen en waarneming',
+        roles: ['uav', 'emb', 'int'],
         statement: 'Indoor vliegen zonder GPS en mechanische dimensionering.',
         evidence: [
           { project: 'uav', text: 'Vlucht binnen zonder GPS: LiDAR en ToF-hoogte gecombineerd met de MAVLink-stand.' },
@@ -1048,6 +1144,7 @@ const nl: Content = {
       },
       {
         title: 'Testen, valideren en veiligheid',
+        roles: ['test', 'uav', 'int'],
         statement: 'Ontwerpverificatie en hoogspanningsveiligheid.',
         evidence: [
           { project: 'hvdc', text: 'Veiligheidscircuit ontworpen voor een test op 5 kV: noodstop, contactoren en automatische ontlading (ontwerpfase, niet afgewerkt).' },
@@ -1101,7 +1198,7 @@ const nl: Content = {
     heading: 'LCR‑meter: meetketen',
     rail: 'Signaalpad, van de BNC-poort tot het resultaat.',
     intro:
-      'Het aandrijfsignaal doorloopt de analoge ingangstrap, de 12-bit-ADC (spanning en stroom worden na elkaar via dezelfde omzetter gemeten), de ESP32 en de DSP-trap. Het scherm toont het signaal in elke trap; de berekeningen draaien live in de browser.',
+      'Van de BNC-poort tot het resultaat: analoge ingangstrap, 12-bit-ADC, ESP32 en DSP. Het scherm toont het signaal in elke trap.',
     note: 'Gestileerde print en vereenvoudigd signaalpad; de echte print staat ernaast. De signalen komen uit een DSP-model van het meetprincipe (12-bit-ADC, SNR van ongeveer 70 dB, bekend V/I-verschil gecompenseerd), niet uit metingen of firmware van het instrument: die firmware is nog niet geschreven.',
     canvasLabel:
       '3D-model van de print van de LCR-meter. Een rode stip volgt het signaal van de BNC-poort via de analoge ingangstrap, de ADC en de ESP32 naar de uitgang. Sleep of gebruik de pijltjestoetsen om te draaien.',
@@ -1130,7 +1227,7 @@ const nl: Content = {
     source: 'Broncode van deze site',
   },
   cv: 'Mijn cv downloaden (PDF)',
-  footer: 'Gebouwd met Astro en Three.js. Geen tracking, geen cookies.',
+  footer: 'Gebouwd met Astro en Three.js. Anonieme bezoekstatistieken (GoatCounter), geen cookies.',
 };
 
 export const content: Record<Lang, Content> = { en, fr, nl };

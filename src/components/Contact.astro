@@ -23,7 +23,7 @@ const cv = cvUrl(lang);
     {SITE.phone && <a class="contact-phone" href={`tel:${SITE.phone.replace(/\s/g, '')}`}>{SITE.phone}</a>}
     <div class="contact-links">
       {owner && <a href={`https://github.com/${owner}`} rel="me">{t.github}</a>}
-      {cv && <a href={cv} download>{content[lang].cv}</a>}
+      {cv && <a href={cv} download data-goatcounter-click="cv-download" data-goatcounter-title="CV">{content[lang].cv}</a>}
       {SITE.linkedin && <a href={SITE.linkedin} rel="me">{t.linkedin}</a>}
     </div>
   </div>

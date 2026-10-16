@@ -26,8 +26,15 @@ const locale: Record<Lang, string> = { en: 'en_US', fr: 'fr_BE', nl: 'nl_BE' };
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{t.meta.title}</title>
     <meta name="description" content={t.meta.description} />
-    <meta name="theme-color" content="#080a12" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b0e14" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline>
+      try {
+        var th = localStorage.getItem('theme');
+        if (th !== 'light' && th !== 'dark') th = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        document.documentElement.dataset.theme = th;
+      } catch (e) {}
+    </script>
     <link rel="canonical" href={abs(url(`${lang}/`))} />
     {LANGS.map((l) => <link rel="alternate" hreflang={l} href={abs(url(`${l}/`))} />)}
     <link rel="alternate" hreflang="x-default" href={abs(url('en/'))} />
@@ -37,6 +44,7 @@ const locale: Record<Lang, string> = { en: 'en_US', fr: 'fr_BE', nl: 'nl_BE' };
     <meta property="og:description" content={t.meta.description} />
     <meta property="og:url" content={abs(url(`${lang}/`))} />
     <meta property="og:locale" content={locale[lang]} />
+    <script is:inline data-goatcounter="https://ifloud2.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   </head>
   <body>
     <a class="skip" href="#main">{t.skip}</a>

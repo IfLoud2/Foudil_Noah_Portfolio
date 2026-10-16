@@ -6,6 +6,7 @@
  * Les signaux viennent de dsp.ts (Web Worker) : mêmes calculs qu'auparavant, nouvelle présentation.
  * La géométrie de la carte est dans pcb-layout.ts ; ici : scène, caméra, écran, interface.
  */
+import { onThemeChange, themedMaterials } from './theme.ts';
 import {
   BufferAttribute,
   BufferGeometry,
@@ -70,6 +71,8 @@ const SLOTS = (() => {
     return slot;
   });
 })();
+/** Vitesse de la lecture unique dans le récit (1 = vitesse de la section dédiée). */
+const ONCE_SPEED = 1.4;
 const TOTAL_MS = SLOTS.reduce((sum, s) => sum + s.dwell + s.travel, 0);
 
 interface Where {
@@ -133,6 +136,10 @@ function dotTexture(): CanvasTexture {
 const lineMaterial = (color: number, opacity: number): LineBasicMaterial =>
   new LineBasicMaterial({ color, transparent: true, opacity });
 
+const themed = themedMaterials();
+const tLine = (dark: number, light: number, opacity: number): LineBasicMaterial =>
+  themed.add(lineMaterial(dark, opacity), dark, light);
+
 function segments(edges: number[], material: LineBasicMaterial): LineSegments {
   const geo = new BufferGeometry();
   geo.setAttribute('position', new BufferAttribute(new Float32Array(edges), 3));
@@ -141,7 +148,14 @@ function segments(edges: number[], material: LineBasicMaterial): LineSegments {
   return obj;
 }
 
-export function startBench(root: HTMLElement): void {
+export interface BenchControl {
+  /** Joue le trajet du signal une seule fois, de la prise BNC au résultat, puis reste sur le résultat. */
+  playOnce(): void;
+  /** Remet la démo au départ et la met en pause (tant qu'elle n'a pas été jouée). */
+  stop(): void;
+}
+
+export function startBench(root: HTMLElement): BenchControl | null {
   const lang = document.documentElement.lang || 'en';
   const nf = (digits: number) => new Intl.NumberFormat(lang, { maximumSignificantDigits: digits });
   const num = (x: number, digits = 4): string => nf(digits).format(x).replace('-', MINUS);
@@ -177,7 +191,7 @@ export function startBench(root: HTMLElement): void {
     if (el) el.textContent = text;
   };
 
-  const css = getComputedStyle(root);
+  const css = getComputedStyle(scopeCv);
   const color = (name: string): string => css.getPropertyValue(name).trim();
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -187,7 +201,7 @@ export function startBench(root: HTMLElement): void {
     renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   } catch {
     root.classList.add('is-static');
-    return;
+    return null;
   }
   renderer.setClearColor(0x000000, 0);
   host.appendChild(renderer.domElement);
@@ -197,18 +211,18 @@ export function startBench(root: HTMLElement): void {
   const board = new Group();
   scene.add(board);
 
-  board.add(segments(BOARD_EDGES, lineMaterial(0x3b4a86, 0.95)));
-  board.add(segments(TRACE_EDGES, lineMaterial(0x3b4a86, 0.8)));
-  board.add(segments(DECOR_EDGES, lineMaterial(0x4a5a9e, 0.6)));
+  board.add(segments(BOARD_EDGES, tLine(0x4a5670, 0x7a859e, 0.95)));
+  board.add(segments(TRACE_EDGES, tLine(0x4a5670, 0x7a859e, 0.8)));
+  board.add(segments(DECOR_EDGES, tLine(0x56627c, 0x9aa3b8, 0.6)));
 
   const viaGeo = new BufferGeometry();
   const vias = viaPositions();
   viaGeo.setAttribute('position', new BufferAttribute(vias, 3));
   const viaCol = new Float32Array(vias.length);
   for (let i = 0; i < viaCol.length; i += 3) {
-    viaCol[i] = 0.2;
-    viaCol[i + 1] = 0.27;
-    viaCol[i + 2] = 0.5;
+    viaCol[i] = 0.3;
+    viaCol[i + 1] = 0.34;
+    viaCol[i + 2] = 0.44;
   }
   viaGeo.setAttribute('color', new BufferAttribute(viaCol, 3));
   const viaPts = new Points(
@@ -218,9 +232,15 @@ export function startBench(root: HTMLElement): void {
   viaPts.frustumCulled = false;
   board.add(viaPts);
 
+  onThemeChange(() => {
+    themed.apply();
+    lastKey = '';
+    if (raf === 0) frame(performance.now());
+  });
+
   const parts = PARTS.map((part) => {
-    const mat = lineMaterial(0x9aa4c8, 0.55);
-    const halo = lineMaterial(0x19e6ff, 0);
+    const mat = tLine(0x9099ab, 0x5a6578, 0.55);
+    const halo = tLine(0x35d0e6, 0x0a6f84, 0);
     board.add(segments(part.edges, mat));
     board.add(segments(part.halo, halo));
     return { stops: part.stops, mat, halo };
@@ -237,14 +257,14 @@ export function startBench(root: HTMLElement): void {
     board.add(line);
     return { geo };
   };
-  makeLine(pathV, lineMaterial(0x6f86e0, 0.95));
-  makeLine(pathI, lineMaterial(0x6f86e0, 0.95));
-  const litV = makeLine(pathV, lineMaterial(0xff3040, 0.95)).geo;
-  const litI = makeLine(pathI, lineMaterial(0xff3040, 0.95)).geo;
+  makeLine(pathV, tLine(0x5f7da0, 0x3c5a80, 0.95));
+  makeLine(pathI, tLine(0x5f7da0, 0x3c5a80, 0.95));
+  const litV = makeLine(pathV, lineMaterial(0xf0a43a, 0.95)).geo;
+  const litI = makeLine(pathI, lineMaterial(0xf0a43a, 0.95)).geo;
   litV.setDrawRange(0, 0);
   litI.setDrawRange(0, 0);
 
-  const RED: [number, number, number] = [1, 0.18, 0.25];
+  const RED: [number, number, number] = [0.88, 0.38, 0.04];
   const makeDot = (size: number, opacity: number, alphaTest: number): { geo: BufferGeometry; pos: BufferAttribute } => {
     const geo = new BufferGeometry();
     const pos = new BufferAttribute(new Float32Array(3), 3);
@@ -553,7 +573,7 @@ export function startBench(root: HTMLElement): void {
 
   const legend = (ctx: Ctx, showI: boolean): void => {
     label(ctx, 'CH1 V', 10, 14, color('--cyan'));
-    if (showI) label(ctx, 'CH2 I', 62, 14, color('--magenta'));
+    if (showI) label(ctx, 'CH2 I', 62, 14, color('--amber'));
   };
 
   /** Étages 0 et 1 : sinusoïdes analogiques ; au 2e, le décalage entre V et I. */
@@ -577,7 +597,7 @@ export function startBench(root: HTMLElement): void {
       if (s < 1) beam(ctx, (last / steps) * w, y(AMP * Math.sin(omega * ((last / steps) * span) + a.phi0 - shift)), stroke);
     };
     curve(0, color('--cyan'));
-    if (showI) curve(a.theta, color('--magenta'));
+    if (showI) curve(a.theta, color('--amber'));
     label(ctx, `${eng(span / 10, 's', 2)}/div`, 10, h - 12, color('--ink-2'));
 
     const alpha = showI ? clamp01((s - 0.55) / 0.25) : 0;
@@ -590,7 +610,7 @@ export function startBench(root: HTMLElement): void {
       ctx.save();
       ctx.globalAlpha = alpha;
       dashed(ctx, xV, 0, h - 26, color('--cyan'));
-      dashed(ctx, xI, 0, h - 26, color('--magenta'));
+      dashed(ctx, xI, 0, h - 26, color('--amber'));
       const yb = h - 34;
       if (Math.abs(xV - xI) > 3) {
         ctx.strokeStyle = color('--ink');
@@ -616,7 +636,7 @@ export function startBench(root: HTMLElement): void {
     ctx.lineWidth = 1;
     for (const [shift, stroke] of [
       [0, color('--cyan')],
-      [a.theta, color('--magenta')],
+      [a.theta, color('--amber')],
     ] as const) {
       ctx.beginPath();
       const steps = Math.max(8, Math.round(w / 2));
@@ -637,7 +657,7 @@ export function startBench(root: HTMLElement): void {
       const x = ((n + 0.5) / count) * w;
       for (const [arr, stroke] of [
         [a.v, color('--cyan')],
-        [a.i, color('--magenta')],
+        [a.i, color('--amber')],
       ] as const) {
         const py = y(arr[n] ?? 0);
         ctx.strokeStyle = stroke;
@@ -666,7 +686,7 @@ export function startBench(root: HTMLElement): void {
     const filled = Math.floor(w * s);
     const lanes: ReadonlyArray<readonly [Float32Array, string, string, number]> = [
       [a.v, color('--cyan'), 'V[n]', 0],
-      [a.i, color('--magenta'), 'I[n]', 1],
+      [a.i, color('--amber'), 'I[n]', 1],
     ];
     for (const [arr, stroke, name, k] of lanes) {
       const cy = 18 + lane * k + lane / 2;
@@ -720,8 +740,8 @@ export function startBench(root: HTMLElement): void {
     if (upTo > a.bin) {
       const mx = px(a.bin);
       const my = py(a.spectrum[a.bin] ?? -140);
-      dashed(ctx, mx, my, h, color('--magenta'));
-      beam(ctx, mx, my, color('--magenta'));
+      dashed(ctx, mx, my, h, color('--amber'));
+      beam(ctx, mx, my, color('--amber'));
       label(ctx, `k = ${a.bin}`, Math.min(mx + 10, w - 56), Math.max(my, 30), color('--ink'));
     }
   }
@@ -764,9 +784,9 @@ export function startBench(root: HTMLElement): void {
     }
     const [ix, iy] = tip(lenI, phiI);
     const [vx, vy] = tip(lenV, phiV);
-    arrow(ctx, cx, cy, ix, iy, color('--magenta'));
+    arrow(ctx, cx, cy, ix, iy, color('--amber'));
     arrow(ctx, cx, cy, vx, vy, color('--cyan'));
-    label(ctx, 'I', ix + 6 * Math.cos(phiI) + 3, iy - 6 * Math.sin(phiI), color('--magenta'));
+    label(ctx, 'I', ix + 6 * Math.cos(phiI) + 3, iy - 6 * Math.sin(phiI), color('--amber'));
     label(ctx, 'V', vx + 6 * Math.cos(phiV) + 3, vy - 6 * Math.sin(phiV), color('--cyan'));
   }
 
@@ -873,11 +893,22 @@ export function startBench(root: HTMLElement): void {
     readout.dataset['ready'] = ready ? 'true' : 'false';
   }
 
+  const endT = (SLOTS[STOPS - 1]?.start ?? 0) + (SLOTS[STOPS - 1]?.dwell ?? 0) * 0.8;
+  let once = false;
+  let played = false;
+
   function tick(now: number): void {
     raf = requestAnimationFrame(tick);
     const dt = Math.min(now - prev, 80);
     prev = now;
-    t += dt;
+    t += dt * (once ? ONCE_SPEED : 1);
+    if (once && t >= endT) {
+      t = endT;
+      once = false;
+      played = true;
+      setPlaying(false);
+      return;
+    }
     if (t >= TOTAL_MS) {
       t = 0;
       if (next) {
@@ -953,4 +984,25 @@ export function startBench(root: HTMLElement): void {
   request();
   frame(performance.now());
   sync();
+
+  return {
+    playOnce(): void {
+      lastKey = '';
+      if (played) {
+        t = endT;
+        setPlaying(false);
+        return;
+      }
+      t = 0;
+      once = true;
+      setPlaying(true);
+    },
+    stop(): void {
+      if (played) return;
+      once = false;
+      t = 0;
+      lastKey = '';
+      setPlaying(false);
+    },
+  };
 }

@@ -2,10 +2,9 @@
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import Header from '../../components/Header.astro';
-import Hero from '../../components/Hero.astro';
+import Story from '../../components/Story.astro';
 import Projects from '../../components/Projects.astro';
 import Path from '../../components/Path.astro';
-import Bench from '../../components/Bench.astro';
 import Skills from '../../components/Skills.astro';
 import Contact from '../../components/Contact.astro';
 import { LANGS, content, type Lang } from '../../i18n/content';
@@ -21,11 +20,10 @@ const owner = githubOwner(Astro.site);
 <Base lang={lang}>
   <Header lang={lang} />
   <main id="main">
-    <Hero lang={lang} />
-    <Skills lang={lang} />
-    <Bench lang={lang} />
-    <Projects lang={lang} />
+    <Story lang={lang} />
     <Path lang={lang} />
+    <Skills lang={lang} />
+    <Projects lang={lang} />
     <Contact lang={lang} />
   </main>
   <footer class="site-footer">

@@ -1,7 +1,9 @@
 ---
+import { Image } from 'astro:assets';
 import { content, type Lang } from '../i18n/content';
 import { SITE } from '../site';
 import { cvUrl } from '../cv';
+import lcr3d from '../assets/lcr-3d.png';
 
 interface Props {
   lang: Lang;
@@ -14,37 +16,59 @@ const last = rest.join(' ');
 const cv = cvUrl(lang);
 ---
 
-<section class="hero" id="top" data-lidar>
-  <div class="lidar-canvas" data-lidar-canvas role="img" tabindex="0" aria-label={t.canvasLabel}></div>
-  <div class="wrap hero-inner">
+<section class="hero" id="top">
+  <div class="wrap hero-head">
     <h1 class="hero-name" aria-label={SITE.name}>
       <span class="line" aria-hidden="true"><span>{first}</span></span>
       {last && <span class="line" aria-hidden="true"><span>{last}</span></span>}
     </h1>
-    <p class="hero-role">{t.role}</p>
-    <p class="hero-intro">{t.intro}</p>
-    <div class="hero-actions">
-      <a class="button" href="#skills">{t.cta}</a>
-      {cv && <a class="button ghost" href={cv} download>{content[lang].cv}</a>}
+    <div class="hero-lead">
+      <p class="hero-role">{t.role}</p>
+      <p class="hero-intro">{t.intro}</p>
+      <div class="hero-actions">
+        <a class="button" href="#skills">{t.cta}</a>
+        {cv && <a class="button ghost" href={cv} download>{content[lang].cv}</a>}
+      </div>
     </div>
   </div>
-  <div class="hero-demo">
-    <dl class="hud" aria-hidden="true">
-      <div>
-        <dt>{t.hud.altitude}</dt>
-        <dd data-hud="alt">0.00 m</dd>
+
+  <div class="split">
+    <a class="half half-hw" href="#bench">
+      <span class="half-tag">{t.hw.tag}</span>
+      <span class="half-body">
+        <span class="half-title">{t.hw.title}</span>
+        <span class="half-subject">{t.hw.subject}</span>
+        <span class="half-text">{t.hw.text}</span>
+        <span class="half-cta">{t.hw.cta}</span>
+      </span>
+      <Image class="half-visual" src={lcr3d} alt={t.hw.alt} widths={[480, 800]} sizes="(min-width: 62rem) 40vw, 90vw" />
+    </a>
+
+    <div class="half half-sw" data-lidar>
+      <div class="lidar-canvas" data-lidar-canvas role="img" tabindex="0" aria-label={t.canvasLabel}></div>
+      <span class="half-tag">{t.sw.tag}</span>
+      <div class="half-body">
+        <span class="half-title">{t.sw.title}</span>
+        <span class="half-subject">{t.sw.subject}</span>
+        <span class="half-text">{t.sw.text}</span>
+        <dl class="hud" aria-hidden="true">
+          <div>
+            <dt>{t.hud.altitude}</dt>
+            <dd data-hud="alt">0.00 m</dd>
+          </div>
+          <div>
+            <dt>{t.hud.heading}</dt>
+            <dd data-hud="yaw">0°</dd>
+          </div>
+          <div>
+            <dt>{t.hud.points}</dt>
+            <dd data-hud="pts">0</dd>
+          </div>
+        </dl>
+        <a class="half-cta" href="#projects">{t.sw.cta}</a>
+        <span class="drag-hint" aria-hidden="true">{t.hint}</span>
       </div>
-      <div>
-        <dt>{t.hud.heading}</dt>
-        <dd data-hud="yaw">0°</dd>
-      </div>
-      <div>
-        <dt>{t.hud.points}</dt>
-        <dd data-hud="pts">0</dd>
-      </div>
-    </dl>
-    <p class="demo-caption">{t.demoCaption}</p>
-    <p class="drag-hint" aria-hidden="true">{t.hint}</p>
+    </div>
   </div>
 </section>
 

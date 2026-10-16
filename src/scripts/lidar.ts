@@ -18,6 +18,7 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three';
+import { onThemeChange, themedMaterials } from './theme.ts';
 import { BEAMS_PER_REV, BEAMS_PER_SECOND, ROOM_D, ROOM_H, ROOM_W, Scanner } from './lidar-sim.ts';
 
 const CAPACITY = 36000;
@@ -41,6 +42,10 @@ function dotTexture(): CanvasTexture {
 function lineMaterial(color: number, opacity: number): LineBasicMaterial {
   return new LineBasicMaterial({ color, transparent: true, opacity });
 }
+
+const themed = themedMaterials();
+const tLine = (dark: number, light: number, opacity: number): LineBasicMaterial =>
+  themed.add(lineMaterial(dark, opacity), dark, light);
 
 /** Sol quadrillé (1 m), arêtes du plafond et montants : le volume de la pièce, très discret. */
 function roomFrame(): Group {
@@ -71,9 +76,9 @@ function roomFrame(): Group {
   posts.setAttribute('position', new BufferAttribute(new Float32Array(p), 3));
 
   const group = new Group();
-  group.add(new LineSegments(floor, lineMaterial(0x2a3566, 0.7)));
-  group.add(new LineLoop(ceil, lineMaterial(0x2a3566, 0.55)));
-  group.add(new LineSegments(posts, lineMaterial(0x2a3566, 0.55)));
+  group.add(new LineSegments(floor, tLine(0x2a3346, 0x9099ab, 0.7)));
+  group.add(new LineLoop(ceil, tLine(0x2a3346, 0x9099ab, 0.55)));
+  group.add(new LineSegments(posts, tLine(0x2a3346, 0x9099ab, 0.55)));
   return group;
 }
 
@@ -107,7 +112,11 @@ export function startLidar(root: HTMLElement): void {
   cloudGeo.setDrawRange(0, 0);
   const cloud = new Points(
     cloudGeo,
-    new PointsMaterial({ size: 2.8, sizeAttenuation: false, vertexColors: true, map: dotTexture(), alphaTest: 0.4 }),
+    themed.add(
+      new PointsMaterial({ size: 2.8, sizeAttenuation: false, vertexColors: true, map: dotTexture(), alphaTest: 0.4 }),
+      0xffffff,
+      0x5a8fa8,
+    ),
   );
   cloud.frustumCulled = false;
   scene.add(cloud);
@@ -118,7 +127,7 @@ export function startLidar(root: HTMLElement): void {
   const ringGeo = new BufferGeometry();
   const ringAttr = new BufferAttribute(ringPos, 3);
   ringGeo.setAttribute('position', ringAttr);
-  const ring = new LineLoop(ringGeo, lineMaterial(0x19e6ff, 0.5));
+  const ring = new LineLoop(ringGeo, tLine(0x35d0e6, 0x0a6f84, 0.5));
   ring.frustumCulled = false;
   scene.add(ring);
 
@@ -129,15 +138,19 @@ export function startLidar(root: HTMLElement): void {
     'position',
     new BufferAttribute(new Float32Array([-0.2, 0, -0.2, 0.2, 0, 0.2, -0.2, 0, 0.2, 0.2, 0, -0.2]), 3),
   );
-  marker.add(new LineSegments(armGeo, lineMaterial(0xff3d9a, 1)));
+  marker.add(new LineSegments(armGeo, tLine(0xf0a43a, 0xa85a05, 1)));
   scene.add(marker);
   const altPos = new Float32Array(6);
   const altGeo = new BufferGeometry();
   const altAttr = new BufferAttribute(altPos, 3);
   altGeo.setAttribute('position', altAttr);
-  const altLine = new Line(altGeo, lineMaterial(0xff3d9a, 0.5));
+  const altLine = new Line(altGeo, tLine(0xf0a43a, 0xa85a05, 0.5));
   altLine.frustumCulled = false;
   scene.add(altLine);
+  onThemeChange(() => {
+    themed.apply();
+    if (reduced) draw();
+  });
 
   const hud = {
     alt: root.querySelector<HTMLElement>('[data-hud="alt"]'),

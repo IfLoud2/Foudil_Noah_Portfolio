@@ -33,8 +33,8 @@ export interface Pose {
 
 /** sRGB -> linéaire : Three.js traite les couleurs de sommets comme linéaires. */
 const lin = (c: number): number => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-const LOW: readonly [number, number, number] = [lin(0x19 / 255), lin(0xe6 / 255), lin(0xff / 255)]; // #19e6ff (sol)
-const HIGH: readonly [number, number, number] = [lin(0xb0 / 255), lin(0x5c / 255), lin(0xff / 255)]; // #b05cff (plafond)
+const LOW: readonly [number, number, number] = [lin(0x22 / 255), lin(0x9a / 255), lin(0xc8 / 255)]; // #229ac8 (sol)
+const HIGH: readonly [number, number, number] = [lin(0xa6 / 255), lin(0xf0 / 255), lin(0xf8 / 255)]; // #a6f0f8 (plafond)
 
 function rect(x0: number, y0: number, x1: number, y1: number, h: number): Segment[] {
   return [

@@ -1,0 +1,399 @@
+---
+import { Image } from 'astro:assets';
+import IntroSheet from './IntroSheet.astro';
+import { content, type Lang } from '../i18n/content';
+import uavHardware from '../assets/uav-hardware.png';
+import hvdcCabinet from '../assets/hvdc-cabinet.png';
+import { SITE } from '../site';
+import { cvUrl } from '../cv';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = content[lang].hero;
+const b = content[lang].bench;
+const ro = b.readout;
+const benchLabels = JSON.stringify({
+  stops: b.stops,
+  captions: b.captions,
+  dut: b.dut,
+  impedance: ro.impedance,
+  phase: ro.phase,
+  value: ro.value,
+  play: content[lang].bench.controls.play,
+  pause: content[lang].bench.controls.pause,
+}).replace(/</g, '\\u003c');
+const [first = SITE.name, ...rest] = SITE.name.split(' ');
+const last = rest.join(' ');
+const cv = cvUrl(lang);
+const miles = [...content[lang].path.items].reverse();
+const seeProject = content[lang].path.seeProject;
+const thumbs: Record<string, ImageMetadata> = { uav: uavHardware, hvdc: hvdcCabinet };
+const hwChips = ['AD9850 DDS', 'AD7450 · 12 bit', 'ESP32', 'MAX4582 · INA128 · PGA103 · DAC8811'];
+const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLink · EKF3', 'WebSocket · Three.js'];
+---
+
+<section class="story" id="top" data-story>
+  <div class="story-pin">
+    <div class="layer intro">
+      <IntroSheet name={SITE.name} />
+      <div class="wrap intro-inner">
+        <h1 class="hero-name" aria-label={SITE.name}>
+          <span class="line" aria-hidden="true"><span>{first}</span></span>
+          {last && <span class="line" aria-hidden="true"><span>{last}</span></span>}
+        </h1>
+        <div class="hero-lead">
+          <p class="hero-role">{t.role}</p>
+          <p class="hero-intro">{t.intro}</p>
+          <div class="hero-actions">
+            <a class="button" href="#skills">{t.cta}</a>
+            {cv && <a class="button ghost" href={cv} download data-goatcounter-click="cv-download" data-goatcounter-title="CV">{content[lang].cv}</a>}
+          </div>
+        </div>
+        <p class="scroll-hint" aria-hidden="true">{t.scroll}</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="pane pane-hw">
+        <div class="hw-demo" data-story-bench>
+          <div class="pcb-view" data-pcb role="img" tabindex="0" aria-label={b.canvasLabel}></div>
+          <div class="scope">
+            <div class="scope-head" aria-live="off">
+              <span class="scope-stage" data-scope="stage"></span>
+              <span class="scope-caption" data-scope="caption"></span>
+            </div>
+            <canvas data-scope-cv role="img" aria-label={b.scopeLabel}></canvas>
+            <dl class="readout" data-ready="false">
+              <div>
+                <dt>{ro.impedance}</dt>
+                <dd data-out="z">–</dd>
+              </div>
+              <div>
+                <dt>{ro.phase}</dt>
+                <dd data-out="theta">–</dd>
+              </div>
+            </dl>
+          </div>
+          <p class="demo-note">{t.demoNote}</p>
+          <form class="controls" hidden>
+            <select name="dut"><option value="C" selected>C</option></select>
+            <input name="freq" type="range" min="0" max="100" step="0.5" value="43.5" />
+            <button type="button" data-play>{b.controls.pause}</button>
+            <span data-out="val-label"></span>
+            <span data-out="val"></span>
+            <span data-out="rep"></span>
+          </form>
+          <script is:inline type="application/json" data-bench-labels set:html={benchLabels} />
+        </div>
+        <span class="half-tag">{t.hw.tag}</span>
+        <div class="pane-body">
+          <h2 class="half-title">{t.hw.title}</h2>
+          <p class="half-subject">{t.hw.subject}</p>
+          <p class="half-text">{t.hw.text}</p>
+          <ul class="chips" aria-label={t.hw.subject}>
+            {hwChips.map((c, i) => <li style={`--i:${i}`}>{c}</li>)}
+          </ul>
+          <a class="half-cta" href="#lcr">{t.hw.cta}</a>
+        </div>
+      </div>
+
+      <div class="pane pane-sw" data-lidar>
+        <div class="lidar-canvas" data-lidar-canvas role="img" tabindex="0" aria-label={t.canvasLabel}></div>
+        <span class="half-tag">{t.sw.tag}</span>
+        <div class="pane-body">
+          <h2 class="half-title">{t.sw.title}</h2>
+          <p class="half-subject">{t.sw.subject}</p>
+          <p class="half-text">{t.sw.text}</p>
+          <ul class="chips" aria-label={t.sw.subject}>
+            {swChips.map((c, i) => <li style={`--i:${i}`}>{c}</li>)}
+          </ul>
+          <dl class="hud" aria-hidden="true">
+            <div>
+              <dt>{t.hud.altitude}</dt>
+              <dd data-hud="alt">0.00 m</dd>
+            </div>
+            <div>
+              <dt>{t.hud.heading}</dt>
+              <dd data-hud="yaw">0°</dd>
+            </div>
+            <div>
+              <dt>{t.hud.points}</dt>
+              <dd data-hud="pts">0</dd>
+            </div>
+          </dl>
+          <a class="half-cta" href="#projects">{t.sw.cta}</a>
+          <span class="drag-hint" aria-hidden="true">{t.hint}</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="story-steps" aria-label={t.stepsLabel}>
+      <ol>
+        {
+          t.steps.map((name, i) => (
+            <li>
+              <button type="button" data-step={i} aria-label={name}>
+                <span class="dot" aria-hidden="true"></span>
+                <span class="name" aria-hidden="true">{name}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <div class="road">
+      <div class="horizon" aria-hidden="true"></div>
+      <div class="floor" aria-hidden="true"></div>
+      <p class="road-caption" aria-hidden="true">{t.road}</p>
+      <ol class="miles">
+        {
+          miles.map((m, i) => (
+            <li class={i % 2 === 0 ? 'left' : 'right'} style={`--i:${i}`}>
+              {m.project && thumbs[m.project] && (
+                <a class="m-thumb" href={`#${m.project}`} aria-label={`${seeProject} : ${m.title}`}>
+                  <Image src={thumbs[m.project] as ImageMetadata} alt="" widths={[320, 520]} sizes="26rem" loading="lazy" />
+                  <span>{seeProject} →</span>
+                </a>
+              )}
+              <span class="m-period">{m.period}</span>
+              <span class="m-title">{m.title}</span>
+              <span class="m-place">{m.place}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</section>
+
+<script>
+  const story = document.querySelector<HTMLElement>('[data-story]');
+  const sw = document.querySelector<HTMLElement>('[data-lidar]');
+  if (sw) {
+    const start = (): void => {
+      import('../scripts/lidar.ts')
+        .then((m) => m.startLidar(sw))
+        .catch(() => sw.classList.add('is-static'));
+    };
+    if (document.readyState === 'complete') window.setTimeout(start, 50);
+    else window.addEventListener('load', () => window.setTimeout(start, 100), { once: true });
+  }
+
+  const hwDemo = document.querySelector<HTMLElement>('[data-story-bench]');
+  let bench: { playOnce(): void; stop(): void } | null = null;
+  let hwOn = false;
+  if (hwDemo) {
+    const boot = (): void => {
+      import('../scripts/bench.ts')
+        .then((m) => {
+          bench = m.startBench(hwDemo);
+          if (bench) {
+            if (hwOn) bench.playOnce();
+            else bench.stop();
+          }
+        })
+        .catch(() => hwDemo.classList.add('is-static'));
+    };
+    if (document.readyState === 'complete') window.setTimeout(boot, 120);
+    else window.addEventListener('load', () => window.setTimeout(boot, 200), { once: true });
+  }
+
+  if (story) {
+    const header = document.querySelector<HTMLElement>('.site-header');
+    const pin = story.querySelector<HTMLElement>('.story-pin');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const clamp = (x: number): number => Math.min(Math.max(x, 0), 1);
+    const seg = (p: number, a: number, b: number): number => clamp((p - a) / (b - a));
+    let frame = 0;
+    // Scènes : intro, HW | SW, HW, un arrêt par jalon du chemin (4), SW. Le défilement saute d'une scène à la suivante.
+    const ANCHORS = [0, 0.2, 0.3, 0.41, 0.53, 0.65, 0.77, 0.97];
+    const DOT_OF = [0, 1, 2, 3, 3, 3, 3, 4];
+    const steps = [...story.querySelectorAll<HTMLButtonElement>('button[data-step]')];
+    const STEP_ANCHOR = [0, 1, 2, 3, 7];
+    const span = (): number => {
+      const pinEl = story.querySelector<HTMLElement>('.story-pin');
+      return pinEl ? story.offsetHeight - pinEl.offsetHeight : 0;
+    };
+    const reducedMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const topFor = (i: number): number => {
+      const header = document.querySelector<HTMLElement>('.site-header');
+      return story.getBoundingClientRect().top + window.scrollY - (header ? header.offsetHeight : 0) + (ANCHORS[i] ?? 0) * span();
+    };
+    const progress = (): number => {
+      const header = document.querySelector<HTMLElement>('.site-header');
+      const total = span();
+      return total > 0 ? (-(story.getBoundingClientRect().top - (header ? header.offsetHeight : 0))) / total : 0;
+    };
+
+    // Déplacement animé avec temps de recharge : tant qu'il dure (et un instant après), les molettes sont ignorées.
+    let tween = 0;
+    let busy = false;
+    let lastWheel = 0;
+    let readyAt = 0;
+    const ease = (x: number): number => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+    const goTo = (i: number): void => {
+      const target = topFor(Math.min(Math.max(i, 0), ANCHORS.length - 1));
+      const from = window.scrollY;
+      if (reducedMotion() || Math.abs(target - from) < 2) {
+        window.scrollTo({ top: target, behavior: 'instant' });
+        return;
+      }
+      const dist = Math.abs(target - from) / Math.max(span(), 1);
+      const dur = Math.min(4200, 1100 + dist * 9500);
+      const t0 = performance.now();
+      busy = true;
+      cancelAnimationFrame(tween);
+      const stepFn = (now: number): void => {
+        const k = Math.min((now - t0) / dur, 1);
+        window.scrollTo({ top: from + (target - from) * ease(k), behavior: 'instant' });
+        if (k < 1) tween = requestAnimationFrame(stepFn);
+        else {
+          busy = false;
+          readyAt = now + 450;
+        }
+      };
+      tween = requestAnimationFrame(stepFn);
+    };
+    const nearest = (p: number): number => ANCHORS.reduce((best, a, i) => (Math.abs(a - p) < Math.abs((ANCHORS[best] ?? 0) - p) ? i : best), 0);
+    /** Scène suivante dans le sens dir ; null si le récit est terminé (le défilement normal reprend). */
+    const nextScene = (dir: 1 | -1): number | null => {
+      const p = progress();
+      const last = ANCHORS.length - 1;
+      if (p < -0.02 || p > (ANCHORS[last] ?? 1) + 0.01) return null;
+      if (dir > 0) {
+        if (p >= (ANCHORS[last] ?? 1) - 0.004) return null;
+        const i = ANCHORS.findIndex((a) => a > p + 0.004);
+        return i < 0 ? null : i;
+      }
+      if (p <= 0.004) return null;
+      let j = -1;
+      ANCHORS.forEach((a, i) => {
+        if (a < p - 0.004) j = i;
+      });
+      return j < 0 ? null : j;
+    };
+    const attempt = (dir: 1 | -1, ev: Event): void => {
+      if (story.dataset['active'] !== 'true') return;
+      const i = nextScene(dir);
+      if (i === null) return;
+      ev.preventDefault();
+      if (busy || performance.now() < readyAt) return;
+      goTo(i);
+    };
+    window.addEventListener(
+      'wheel',
+      (e: WheelEvent) => {
+        const now = performance.now();
+        const idle = now - lastWheel > 160;
+        lastWheel = now;
+        if (e.ctrlKey || Math.abs(e.deltaY) < 4 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+        if (story.dataset['active'] !== 'true') return;
+        if (nextScene(e.deltaY > 0 ? 1 : -1) === null) return;
+        e.preventDefault();
+        // Une nouvelle intention = une pause dans la molette (l'inertie du trackpad ne compte pas).
+        if (!idle || busy || now < readyAt) {
+          if (!busy) readyAt = Math.max(readyAt, now + 160);
+          return;
+        }
+        attempt(e.deltaY > 0 ? 1 : -1, e);
+      },
+      { passive: false },
+    );
+    let ty = 0;
+    window.addEventListener('touchstart', (e: TouchEvent) => (ty = e.touches[0]?.clientY ?? 0), { passive: true });
+    window.addEventListener(
+      'touchmove',
+      (e: TouchEvent) => {
+        if (story.dataset['active'] !== 'true') return;
+        const y = e.touches[0]?.clientY ?? ty;
+        const dy = ty - y;
+        const dir = dy > 0 ? 1 : -1;
+        if (nextScene(dir) === null) return;
+        e.preventDefault();
+        if (Math.abs(dy) > 36) {
+          ty = y;
+          attempt(dir, e);
+        }
+      },
+      { passive: false },
+    );
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      const el = e.target;
+      if (el instanceof HTMLElement && el.closest('input, select, textarea, button, a, [contenteditable]')) return;
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      if (['ArrowDown', 'PageDown', ' '].includes(e.key) && !e.shiftKey) attempt(1, e);
+      else if (['ArrowUp', 'PageUp'].includes(e.key) || (e.key === ' ' && e.shiftKey)) attempt(-1, e);
+    });
+    steps.forEach((btn, i) => btn.addEventListener('click', () => goTo(STEP_ANCHOR[i] ?? 0)));
+
+    const setVars = (v: Record<string, number>): void => {
+      for (const [k, x] of Object.entries(v)) story.style.setProperty(`--${k}`, x.toFixed(4));
+    };
+
+    const update = (): void => {
+      frame = 0;
+      if (!pin || story.dataset['active'] !== 'true') return;
+      const headerH = header ? header.offsetHeight : 0;
+      const total = story.offsetHeight - pin.offsetHeight;
+      const p = clamp(-(story.getBoundingClientRect().top - headerH) / total);
+      const hw = seg(p, 0.2, 0.3);
+      const walk = seg(p, 0.34, 0.9);
+      const past = walk >= 0.5;
+      // La démo du LCR-mètre se joue seule, à sa vitesse normale, tant que la scène HW est affichée.
+      const miles = story.querySelectorAll<HTMLElement>('.miles li');
+      miles.forEach((li, i) => {
+        const u = walk * 4.4 - i * 0.95;
+        const shown = u > 0.2 && u < 0.95;
+        li.inert = !shown;
+        li.classList.toggle('is-on', shown);
+      });
+      const on = p >= 0.29 && p < 0.45;
+      if (on !== hwOn) {
+        hwOn = on;
+        story.dataset['hw'] = on ? 'on' : 'off';
+        if (bench) {
+          if (on) bench.playOnce();
+          else bench.stop();
+        }
+      }
+      const cur = DOT_OF[nearest(p)] ?? 0;
+      steps.forEach((btn, i) => (i === cur ? btn.setAttribute('aria-current', 'step') : btn.removeAttribute('aria-current')));
+      setVars({
+        intro: 1 - seg(p, 0.04, 0.12),
+        split: seg(p, 0.08, 0.2),
+        hw,
+        scan: on ? 1 : 0,
+        walk,
+        swin: seg(p, 0.9, 0.99),
+        'g-hw': past ? 0.001 : 1 + 8 * hw,
+        'g-sw': past ? 9 : 1 - 0.999 * hw,
+        road: Math.min(1, Math.sin(Math.PI * walk) * 3),
+        zoom: past ? 0.82 + 0.18 * seg(walk, 0.5, 1) : 1 + 0.45 * seg(walk, 0, 0.5),
+      });
+    };
+
+    const schedule = (): void => {
+      if (frame === 0) frame = requestAnimationFrame(update);
+    };
+
+    const apply = (): void => {
+      story.dataset['active'] = reduce.matches ? 'false' : 'true';
+      if (reduce.matches) {
+        for (const k of ['intro', 'split', 'hw', 'scan', 'walk', 'swin', 'g-hw', 'g-sw', 'road', 'zoom']) {
+          story.style.removeProperty(`--${k}`);
+        }
+      } else {
+        schedule();
+      }
+    };
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    reduce.addEventListener('change', apply);
+    apply();
+  }
+</script>
