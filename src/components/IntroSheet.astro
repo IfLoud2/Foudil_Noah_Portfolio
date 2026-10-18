@@ -80,7 +80,6 @@ const uavParts: Shape[] = [
   box(-30, -14, 114, 60, 28, 3), // Raspberry Pi Zero 2W
   cyl(0, 0, 138, 16, 16), // LD19
 ];
-const uavTop = cyl(0, 0, 138, 7, 0).edge;
 const uavProps = [disc(80, 0, 72, 40), disc(-80, 0, 72, 40), disc(0, 80, 72, 40), disc(0, -80, 72, 40)].join(' ');
 const uavAxis = axis(0, 0, [[12, 46], [50, 88], [91, 114], [117, 138], [154, 172]]);
 const uavCalls = calls([
