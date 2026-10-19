@@ -100,7 +100,6 @@ export interface Content {
     intro: string;
     cta: string;
     scroll: string;
-    road: string;
     hw: HalfCopy;
     sw: HalfCopy;
     hint: string;
@@ -169,15 +168,14 @@ const en: Content = {
       'Design and validation of embedded electronic systems, from schematic to firmware: multilayer PCBs (KiCad), STM32, ESP32, data-acquisition chains.',
     cta: 'Technical skills',
     scroll: 'Space or scroll',
-    road: '2020 → 2026',
     hw: { tag: 'HW', title: 'Hardware', subject: 'LCR-meter · PCB v3', text: 'Mixed-signal board with a DDS source, a 12-bit ADC and an analog chain qualified stage by stage on the bench.', cta: 'See the LCR-meter project', alt: 'KiCad 3D view of the LCR-meter mainboard' },
     sw: { tag: 'SW', title: 'Software', subject: 'Indoor UAV · LiDAR mapping', text: 'asyncio acquisition on a Raspberry Pi, EKF3 attitude from the flight controller, pseudo-3D map in the browser. Live simulation.', cta: 'See the UAV project' },
     hint: 'Drag to rotate',
     canvasLabel: 'Interactive point cloud. Drag, or use the arrow keys, to rotate the view.',
     hud: { altitude: 'Altitude', heading: 'Heading', points: 'Points' },
-    demoNote: 'Stylised board and simplified signal path. Signals come from a DSP model of the measurement (12-bit ADC, about 70 dB SNR), not from measurements: the firmware is not written yet.',
+    demoNote: 'Simulated signals (DSP model of the measurement)',
     stepsLabel: 'Story steps',
-    steps: ['Intro', 'HW | SW', 'Hardware', 'Path', 'Software'],
+    steps: ['Intro', 'HW | SW', 'Hardware', 'Software'],
   },
   projects: {
     heading: 'Projects',
@@ -531,15 +529,14 @@ const fr: Content = {
       'Conception et validation de systèmes électroniques embarqués, du schéma au firmware : PCB multicouches (KiCad), STM32, ESP32, chaînes d’acquisition.',
     cta: 'Compétences techniques',
     scroll: 'Espace ou défiler',
-    road: '2020 → 2026',
     hw: { tag: 'HW', title: 'Hardware', subject: 'LCR-mètre · PCB v3', text: 'Carte mixte avec source DDS, CAN 12 bits et chaîne analogique qualifiée étage par étage au banc.', cta: 'Voir le projet LCR-mètre', alt: 'Vue 3D KiCad de la carte principale du LCR-mètre' },
     sw: { tag: 'SW', title: 'Software', subject: 'Drone d’intérieur · cartographie LiDAR', text: 'Acquisition asyncio sur Raspberry Pi, attitude EKF3 du contrôleur de vol, carte pseudo-3D dans le navigateur. Simulation en direct.', cta: 'Voir le projet drone' },
     hint: 'Glisser pour tourner',
     canvasLabel: 'Nuage de points interactif. Glisser, ou utiliser les flèches du clavier, pour tourner la vue.',
     hud: { altitude: 'Altitude', heading: 'Cap', points: 'Points' },
-    demoNote: 'Carte stylisée et chemin simplifié. Les signaux viennent d’un modèle DSP de la mesure (CAN 12 bits, SNR d’environ 70 dB), pas de mesures : le firmware n’est pas encore écrit.',
+    demoNote: 'Signaux simulés (modèle DSP de la mesure)',
     stepsLabel: 'Étapes du récit',
-    steps: ['Intro', 'HW | SW', 'Hardware', 'Parcours', 'Software'],
+    steps: ['Intro', 'HW | SW', 'Hardware', 'Software'],
   },
   projects: {
     heading: 'Projets',
@@ -893,15 +890,14 @@ const nl: Content = {
       'Ontwerp en validatie van embedded elektronische systemen, van schema tot firmware: meerlaagse PCB’s (KiCad), STM32, ESP32, meetketens.',
     cta: 'Technische vaardigheden',
     scroll: 'Spatie of scroll',
-    road: '2020 → 2026',
     hw: { tag: 'HW', title: 'Hardware', subject: 'LCR-meter · PCB v3', text: 'Mixed-signal-print met DDS-bron, 12-bit-ADC en een analoge keten die trap voor trap op de testbank is gekwalificeerd.', cta: 'Bekijk het LCR-meterproject', alt: 'KiCad 3D-weergave van de hoofdprint van de LCR-meter' },
     sw: { tag: 'SW', title: 'Software', subject: 'Indoor-drone · LiDAR-kartering', text: 'asyncio-acquisitie op een Raspberry Pi, EKF3-stand van de flight controller, pseudo-3D-kaart in de browser. Live simulatie.', cta: 'Bekijk het dronproject' },
     hint: 'Sleep om te draaien',
     canvasLabel: 'Interactieve puntenwolk. Sleep, of gebruik de pijltjestoetsen, om de weergave te draaien.',
     hud: { altitude: 'Hoogte', heading: 'Koers', points: 'Punten' },
-    demoNote: 'Gestileerde print en vereenvoudigd pad. De signalen komen uit een DSP-model van de meting (12-bit-ADC, SNR van ongeveer 70 dB), niet uit metingen: de firmware is nog niet geschreven.',
+    demoNote: 'Gesimuleerde signalen (DSP-model van de meting)',
     stepsLabel: 'Stappen van het verhaal',
-    steps: ['Intro', 'HW | SW', 'Hardware', 'Traject', 'Software'],
+    steps: ['Intro', 'HW | SW', 'Hardware', 'Software'],
   },
   projects: {
     heading: 'Projecten',

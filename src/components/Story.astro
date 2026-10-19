@@ -1,9 +1,6 @@
 ---
-import { Image } from 'astro:assets';
 import IntroSheet from './IntroSheet.astro';
 import { content, type Lang } from '../i18n/content';
-import uavHardware from '../assets/uav-hardware.png';
-import hvdcCabinet from '../assets/hvdc-cabinet.png';
 import { SITE } from '../site';
 import { cvUrl } from '../cv';
 
@@ -28,11 +25,7 @@ const benchLabels = JSON.stringify({
 const [first = SITE.name, ...rest] = SITE.name.split(' ');
 const last = rest.join(' ');
 const cv = cvUrl(lang);
-const miles = [...content[lang].path.items].reverse();
-const seeProject = content[lang].path.seeProject;
-const thumbs: Record<string, ImageMetadata> = { uav: uavHardware, hvdc: hvdcCabinet };
 const hwChips = ['AD9850 DDS', 'AD7450 · 12 bit', 'ESP32', 'MAX4582 · INA128 · PGA103 · DAC8811'];
-const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLink · EKF3', 'WebSocket · Three.js'];
 ---
 
 <section class="story" id="top" data-story>
@@ -76,8 +69,8 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
                 <dd data-out="theta">–</dd>
               </div>
             </dl>
+            <p class="demo-note">{t.demoNote}</p>
           </div>
-          <p class="demo-note">{t.demoNote}</p>
           <form class="controls" hidden>
             <select name="dut"><option value="C" selected>C</option></select>
             <input name="freq" type="range" min="0" max="100" step="0.5" value="43.5" />
@@ -107,9 +100,6 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
           <h2 class="half-title">{t.sw.title}</h2>
           <p class="half-subject">{t.sw.subject}</p>
           <p class="half-text">{t.sw.text}</p>
-          <ul class="chips" aria-label={t.sw.subject}>
-            {swChips.map((c, i) => <li style={`--i:${i}`}>{c}</li>)}
-          </ul>
           <dl class="hud" aria-hidden="true">
             <div>
               <dt>{t.hud.altitude}</dt>
@@ -144,29 +134,6 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
         }
       </ol>
     </nav>
-
-    <div class="road">
-      <div class="horizon" aria-hidden="true"></div>
-      <div class="floor" aria-hidden="true"></div>
-      <p class="road-caption" aria-hidden="true">{t.road}</p>
-      <ol class="miles">
-        {
-          miles.map((m, i) => (
-            <li class={i % 2 === 0 ? 'left' : 'right'} style={`--i:${i}`}>
-              {m.project && thumbs[m.project] && (
-                <a class="m-thumb" href={`#${m.project}`} aria-label={`${seeProject} : ${m.title}`}>
-                  <Image src={thumbs[m.project] as ImageMetadata} alt="" widths={[320, 520]} sizes="26rem" loading="lazy" />
-                  <span>{seeProject} →</span>
-                </a>
-              )}
-              <span class="m-period">{m.period}</span>
-              <span class="m-title">{m.title}</span>
-              <span class="m-place">{m.place}</span>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
   </div>
 </section>
 
@@ -184,7 +151,7 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
   }
 
   const hwDemo = document.querySelector<HTMLElement>('[data-story-bench]');
-  let bench: { playOnce(): void; stop(): void } | null = null;
+  let bench: { playOnce(): void; idle(): void; stop(): void } | null = null;
   let hwOn = false;
   if (hwDemo) {
     const boot = (): void => {
@@ -193,13 +160,34 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
           bench = m.startBench(hwDemo);
           if (bench) {
             if (hwOn) bench.playOnce();
-            else bench.stop();
+            else bench.idle();
           }
         })
         .catch(() => hwDemo.classList.add('is-static'));
     };
     if (document.readyState === 'complete') window.setTimeout(boot, 120);
     else window.addEventListener('load', () => window.setTimeout(boot, 200), { once: true });
+  }
+
+  // La carte 3D se cale autour du bloc de texte : on mesure sa hauteur (vue HW | SW) et sa largeur (vue HW seule).
+  if (hwDemo) {
+    const paneHw = hwDemo.closest<HTMLElement>('.pane-hw');
+    const body = paneHw?.querySelector<HTMLElement>('.pane-body');
+    const text = paneHw?.querySelector<HTMLElement>('.half-text');
+    const measure = (): void => {
+      if (!paneHw || !body || !text) return;
+      const d = hwDemo.getBoundingClientRect();
+      const b = body.getBoundingClientRect();
+      const t = text.getBoundingClientRect();
+      if (d.height === 0 || b.height === 0) return;
+      const scale = d.height / (hwDemo.offsetHeight || d.height);
+      hwDemo.style.setProperty('--card-h', `${Math.max(0, d.bottom - b.top) / scale + 16}px`);
+      hwDemo.style.setProperty('--card-w', `${Math.max(0, t.right - d.left) / scale + 32}px`);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('load', measure, { once: true });
+    if ('ResizeObserver' in window && body) new ResizeObserver(measure).observe(body);
   }
 
   if (story) {
@@ -209,11 +197,11 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
     const clamp = (x: number): number => Math.min(Math.max(x, 0), 1);
     const seg = (p: number, a: number, b: number): number => clamp((p - a) / (b - a));
     let frame = 0;
-    // Scènes : intro, HW | SW, HW, un arrêt par jalon du chemin (4), SW. Le défilement saute d'une scène à la suivante.
-    const ANCHORS = [0, 0.2, 0.3, 0.41, 0.53, 0.65, 0.77, 0.97];
-    const DOT_OF = [0, 1, 2, 3, 3, 3, 3, 4];
+    // Scènes : intro, HW | SW, HW, SW. Le défilement saute d'une scène à la suivante.
+    const ANCHORS = [0, 0.2, 0.3, 0.97];
+    const DOT_OF = [0, 1, 2, 3];
     const steps = [...story.querySelectorAll<HTMLButtonElement>('button[data-step]')];
-    const STEP_ANCHOR = [0, 1, 2, 3, 7];
+    const STEP_ANCHOR = [0, 1, 2, 3];
     const span = (): number => {
       const pinEl = story.querySelector<HTMLElement>('.story-pin');
       return pinEl ? story.offsetHeight - pinEl.offsetHeight : 0;
@@ -341,23 +329,14 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
       const total = story.offsetHeight - pin.offsetHeight;
       const p = clamp(-(story.getBoundingClientRect().top - headerH) / total);
       const hw = seg(p, 0.2, 0.3);
-      const walk = seg(p, 0.34, 0.9);
-      const past = walk >= 0.5;
-      // La démo du LCR-mètre se joue seule, à sa vitesse normale, tant que la scène HW est affichée.
-      const miles = story.querySelectorAll<HTMLElement>('.miles li');
-      miles.forEach((li, i) => {
-        const u = walk * 4.4 - i * 0.95;
-        const shown = u > 0.2 && u < 0.95;
-        li.inert = !shown;
-        li.classList.toggle('is-on', shown);
-      });
-      const on = p >= 0.29 && p < 0.45;
+      const sw = seg(p, 0.5, 0.7);
+      const on = p >= 0.29 && p < 0.5;
       if (on !== hwOn) {
         hwOn = on;
         story.dataset['hw'] = on ? 'on' : 'off';
         if (bench) {
           if (on) bench.playOnce();
-          else bench.stop();
+          else bench.idle();
         }
       }
       const cur = DOT_OF[nearest(p)] ?? 0;
@@ -367,12 +346,8 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
         split: seg(p, 0.08, 0.2),
         hw,
         scan: on ? 1 : 0,
-        walk,
-        swin: seg(p, 0.9, 0.99),
-        'g-hw': past ? 0.001 : 1 + 8 * hw,
-        'g-sw': past ? 9 : 1 - 0.999 * hw,
-        road: Math.min(1, Math.sin(Math.PI * walk) * 3),
-        zoom: past ? 0.82 + 0.18 * seg(walk, 0.5, 1) : 1 + 0.45 * seg(walk, 0, 0.5),
+        'g-hw': (1 + 8 * hw) * (1 - sw) + 0.001 * sw,
+        'g-sw': (1 - 0.999 * hw) * (1 - sw) + 9 * sw,
       });
     };
 
@@ -383,7 +358,7 @@ const swChips = ['asyncio · Pi Zero 2W', 'LD19 · CRC8', 'VL53L1X ToF', 'MAVLin
     const apply = (): void => {
       story.dataset['active'] = reduce.matches ? 'false' : 'true';
       if (reduce.matches) {
-        for (const k of ['intro', 'split', 'hw', 'scan', 'walk', 'swin', 'g-hw', 'g-sw', 'road', 'zoom']) {
+        for (const k of ['intro', 'split', 'hw', 'scan', 'g-hw', 'g-sw']) {
           story.style.removeProperty(`--${k}`);
         }
       } else {

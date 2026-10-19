@@ -151,6 +151,8 @@ function segments(edges: number[], material: LineBasicMaterial): LineSegments {
 export interface BenchControl {
   /** Joue le trajet du signal une seule fois, de la prise BNC au résultat, puis reste sur le résultat. */
   playOnce(): void;
+  /** Hors de la scène HW : la démo tourne en boucle, sans compter comme lecture unique. */
+  idle(): void;
   /** Remet la démo au départ et la met en pause (tant qu'elle n'a pas été jouée). */
   stop(): void;
 }
@@ -294,6 +296,7 @@ export function startBench(root: HTMLElement): BenchControl | null {
   const dotI = makeDot(11, 1, 0.4);
 
   // Vue orbitale : glisser ou flèches. Avant la première interaction, un très léger balancement.
+  const fit = Number(host.dataset['fit']) || 1;
   const view = { az: -0.3, el: 0.74, drag: false, touched: false, lx: 0, ly: 0 };
   const EL_MIN = 0.12;
   const EL_MAX = 1.5;
@@ -313,13 +316,13 @@ export function startBench(root: HTMLElement): BenchControl | null {
   function render(now: number): void {
     const sway = view.touched || reduced ? 0 : Math.sin(now / 3800) * SWAY;
     const az = view.az + sway;
-    const dist = Math.max(11.2, 7.1 / (0.364 * camera.aspect));
+    const dist = Math.max(12.5, 19 / camera.aspect) * fit;
     camera.position.set(
       Math.cos(view.el) * Math.sin(az) * dist,
       Math.sin(view.el) * dist,
       Math.cos(view.el) * Math.cos(az) * dist,
     );
-    camera.lookAt(0, 0.2, 0.3);
+    camera.lookAt(0, -0.3, 0.3);
     renderer.render(scene, camera);
   }
 
@@ -903,11 +906,8 @@ export function startBench(root: HTMLElement): BenchControl | null {
     prev = now;
     t += dt * (once ? ONCE_SPEED : 1);
     if (once && t >= endT) {
-      t = endT;
       once = false;
       played = true;
-      setPlaying(false);
-      return;
     }
     if (t >= TOTAL_MS) {
       t = 0;
@@ -989,12 +989,20 @@ export function startBench(root: HTMLElement): BenchControl | null {
     playOnce(): void {
       lastKey = '';
       if (played) {
-        t = endT;
-        setPlaying(false);
+        setPlaying(true);
         return;
       }
       t = 0;
       once = true;
+      setPlaying(true);
+    },
+    idle(): void {
+      if (played) {
+        setPlaying(true);
+        return;
+      }
+      once = false;
+      lastKey = '';
       setPlaying(true);
     },
     stop(): void {

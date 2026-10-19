@@ -272,12 +272,8 @@ a:hover {
   --split: 1;
   --hw: 0;
   --scan: 1;
-  --walk: 0;
-  --swin: 1;
   --g-hw: 1;
   --g-sw: 1;
-  --road: 0;
-  --zoom: 1;
   position: relative;
 }
 
@@ -412,8 +408,7 @@ a:hover {
   justify-items: start;
 }
 
-.scroll-hint,
-.road {
+.scroll-hint {
   display: none;
 }
 
@@ -544,15 +539,15 @@ a:hover {
   bottom: clamp(1.25rem, 3vw, 2rem);
   left: clamp(1.25rem, 3vw, 2rem);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
-  grid-template-rows: minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.5rem;
   align-items: end;
 }
 
 .hw-demo .pcb-view {
-  grid-column: 1 / -1;
-  grid-row: 1;
+  grid-column: 1;
+  grid-row: 2;
   align-self: stretch;
   aspect-ratio: auto;
   min-height: 0;
@@ -563,9 +558,11 @@ a:hover {
 }
 
 .hw-demo .scope {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
   align-self: start;
+  justify-self: end;
+  width: min(100%, 22rem);
   z-index: 1;
 }
 
@@ -646,7 +643,7 @@ a:hover {
 
 /* Version animée : la section est épinglée et le défilement pilote les variables ci-dessus. */
 .story[data-active='true'] {
-  height: 1300vh;
+  height: 900vh;
 }
 
 .story[data-active='true'] .story-pin {
@@ -702,9 +699,6 @@ a:hover {
   min-height: 0;
   border: 0;
   clip-path: inset(0 calc((1 - var(--split)) * 50%));
-  transform: scale(var(--zoom));
-  transform-origin: 50% 55%;
-  opacity: calc(1 - var(--road) * 0.9);
 }
 
 .story[data-active='true'] .pane {
@@ -724,118 +718,6 @@ a:hover {
 
 .story[data-active='true'][data-hw='on'] .pane-hw .chips li {
   opacity: 1;
-}
-
-.story[data-active='true'] .pane-sw .chips li {
-  opacity: clamp(0, calc((var(--swin) - var(--i) * 0.14) * 6), 1);
-}
-
-/* Chemin : un sol en perspective qui avance, des jalons qui se rapprochent. */
-.story[data-active='true'] .road {
-  --road-color: color-mix(in srgb, var(--amber) calc((1 - var(--walk)) * 100%), var(--cyan));
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: block;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: var(--road);
-  background: linear-gradient(
-    180deg,
-    var(--bg) 0%,
-    color-mix(in srgb, var(--road-color) 12%, var(--bg)) 100%
-  );
-}
-
-.road .horizon {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 36%;
-  height: 1px;
-  background: var(--road-color);
-  box-shadow: 0 0 24px 3px var(--road-color);
-  transform: translateY(calc(sin(var(--walk) * 1440deg) * 3px));
-}
-
-.road .floor {
-  position: absolute;
-  left: -60%;
-  right: -60%;
-  top: 36%;
-  bottom: -20%;
-  transform-origin: 50% 0;
-  transform: perspective(520px) rotateX(64deg) translateY(calc(sin(var(--walk) * 1440deg) * 2px));
-  background:
-    repeating-linear-gradient(90deg, var(--road-color) 0 2px, transparent 2px 6rem),
-    repeating-linear-gradient(0deg, var(--road-color) 0 2px, transparent 2px 5rem);
-  background-position: 0 calc(var(--walk) * 40rem);
-  opacity: 0.55;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 45%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 45%);
-}
-
-.road-caption {
-  position: absolute;
-  top: 1.25rem;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  letter-spacing: 0.18em;
-  color: var(--road-color);
-}
-
-.miles {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.miles li {
-  --u: calc(var(--walk) * 4.4 - var(--i) * 0.95);
-  position: absolute;
-  top: 36%;
-  width: min(26rem, 44vw);
-  display: grid;
-  gap: 0.25rem;
-  padding: 0.9rem 1.1rem;
-  background: color-mix(in srgb, var(--panel) 88%, transparent);
-  border-left: 2px solid var(--road-color);
-  transform-origin: 50% 0;
-  transform: translateY(calc(var(--u) * 46vh)) scale(calc(0.4 + var(--u) * 0.8));
-  opacity: calc(clamp(0, var(--u) * 3, 1) * clamp(0, (1.1 - var(--u)) * 5, 1));
-}
-
-.miles li.left {
-  left: calc(50% - min(26rem, 44vw) - 3vw);
-  text-align: right;
-  border-left: 0;
-  border-right: 2px solid var(--road-color);
-}
-
-.miles li.right {
-  left: calc(50% + 3vw);
-}
-
-.m-period {
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--road-color);
-}
-
-.m-title {
-  font-family: var(--display);
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.m-place {
-  font-size: 0.85rem;
-  color: var(--ink-2);
 }
 
 @media (max-width: 62rem) {
@@ -2136,71 +2018,22 @@ input[type='range']::-moz-range-thumb {
 }
 
 .hw-demo .demo-note {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: end;
   margin: 0;
-  max-width: 22rem;
-  font-size: 0.74rem;
-  line-height: 1.45;
-  color: var(--ink-2);
-}
-
-@media (max-width: 62rem) {
-  .hw-demo .demo-note {
-    display: none;
-  }
-}
-
-/* Jalons du chemin : vignette cliquable vers le projet associé. */
-.miles li {
-  pointer-events: none;
-}
-
-.m-thumb {
-  position: relative;
-  display: block;
-  aspect-ratio: 16 / 6;
-  overflow: hidden;
-  margin-bottom: 0.35rem;
-  border: 1px solid var(--line-hi);
-  text-decoration: none;
-  pointer-events: none;
-}
-
-.miles li.is-on .m-thumb {
-  pointer-events: auto;
-}
-
-.m-thumb img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.85;
-  transition: opacity 0.2s, transform 0.4s;
-}
-
-.m-thumb span {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  padding: 0.15rem 0.5rem;
-  font: 500 0.72rem/1.2 var(--mono);
+  padding: 0.45rem 0.8rem;
+  font: 500 0.7rem/1.4 var(--mono);
   letter-spacing: 0.04em;
-  color: var(--road-color);
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--ink-2);
+  border-top: 1px solid var(--line);
 }
 
-.m-thumb:hover img,
-.m-thumb:focus-visible img {
-  opacity: 1;
-  transform: scale(1.04);
-}
-
-.m-thumb:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: 2px;
+/* Écran large : la carte occupe la zone à droite du texte, sans passer dessous. */
+@media (min-width: 62rem) {
+  .hw-demo {
+    left: clamp(20rem, 34%, 36rem);
+  }
+  .hw-demo .pcb-view {
+    grid-column: 1;
+  }
 }
 
 /* Planche de dessin technique de l'intro. */
@@ -2312,4 +2145,34 @@ input[type='range']::-moz-range-thumb {
 
 :root[data-theme='light'] .p-result {
   color: #0b0f16;
+}
+
+
+/* Carte centrée dans la zone libre ; l'oscilloscope n'apparaît que sur la scène HW seule. */
+@media (min-width: 62rem) {
+  .hw-demo {
+    left: clamp(1.25rem, 3vw, 2rem);
+  }
+  .hw-demo .pcb-view {
+    grid-row: 1 / -1;
+    height: auto;
+    margin-bottom: var(--card-h, 30rem);
+    transition: margin 0.9s ease;
+  }
+  .story[data-hw='on'] .hw-demo .pcb-view {
+    margin-left: var(--card-w, 34rem);
+    margin-right: 20rem;
+    margin-bottom: 0;
+  }
+  .hw-demo .scope {
+    width: min(100%, 19rem);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.6s ease, visibility 0s linear 0.6s;
+  }
+  .story[data-hw='on'] .hw-demo .scope {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s ease 0.3s;
+  }
 }
