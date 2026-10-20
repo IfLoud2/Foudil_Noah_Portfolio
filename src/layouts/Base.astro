@@ -31,7 +31,7 @@ const locale: Record<Lang, string> = { en: 'en_US', fr: 'fr_BE', nl: 'nl_BE' };
     <script is:inline>
       try {
         var th = localStorage.getItem('theme');
-        if (th !== 'light' && th !== 'dark') th = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        if (th !== 'light' && th !== 'dark') th = 'dark';
         document.documentElement.dataset.theme = th;
       } catch (e) {}
     </script>
