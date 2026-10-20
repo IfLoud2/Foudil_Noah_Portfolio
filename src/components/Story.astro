@@ -193,7 +193,9 @@ const hwChips = ['AD9850 DDS', 'AD7450 · 12 bit', 'ESP32', 'MAX4582 · INA128 �
   if (story) {
     const header = document.querySelector<HTMLElement>('.site-header');
     const pin = story.querySelector<HTMLElement>('.story-pin');
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // Version statique (sans scène épinglée) : mouvement réduit demandé, ou écran de téléphone.
+    const STATIC_MQ = '(prefers-reduced-motion: reduce), (max-width: 48rem)';
+    const reduce = window.matchMedia(STATIC_MQ);
     const clamp = (x: number): number => Math.min(Math.max(x, 0), 1);
     const seg = (p: number, a: number, b: number): number => clamp((p - a) / (b - a));
     let frame = 0;

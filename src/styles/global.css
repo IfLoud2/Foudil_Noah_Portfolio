@@ -2176,3 +2176,33 @@ input[type='range']::-moz-range-thumb {
     transition: opacity 0.6s ease 0.3s;
   }
 }
+
+/* Téléphone : pas de scène épinglée. Chaque démo 3D passe au-dessus de son texte, à hauteur fixe. */
+@media (max-width: 48rem) {
+  .story .pane .half-tag {
+    order: -1;
+  }
+  .story .hw-demo {
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    display: block;
+    height: clamp(12rem, 34vh, 17rem);
+    margin: 0.5rem 0 0.75rem;
+  }
+  .story .hw-demo .pcb-view {
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+  }
+  .story .lidar-canvas {
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    height: clamp(12rem, 34vh, 17rem);
+    margin: 0.5rem 0 0.75rem;
+  }
+  .sheet-draw g {
+    filter: none;
+  }
+}
