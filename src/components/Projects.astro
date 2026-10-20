@@ -11,6 +11,7 @@ import lcrPrototype from '../assets/lcr-prototype.png';
 import robotAssembly from '../assets/robot-assembly.png';
 import robotStack from '../assets/robot-pcb-stack.png';
 import hvdcCabinet from '../assets/hvdc-cabinet.png';
+import FpgaDemo from './FpgaDemo.astro';
 
 interface Props {
   lang: Lang;
@@ -85,6 +86,7 @@ const isWide = (img: ImageMetadata): boolean => img.width / img.height > 2;
               <dd>{project.role}</dd>
             </dl>
             <ul class="points">{project.points.map((point) => <li>{point}</li>)}</ul>
+            {project.id === 'fpga' && <FpgaDemo lang={lang} />}
             {project.figures.length > 0 && (
               <div class="figs">
                 {project.figures.map((fig) => {
