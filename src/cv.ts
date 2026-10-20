@@ -14,3 +14,8 @@ export function cvUrl(lang: Lang): string | null {
   };
   return find(`cv-${lang}.pdf`) ?? find('cv.pdf');
 }
+
+/** Nom du fichier proposé au téléchargement (les PDF publiés ont un nom haché). Le NL réutilise le CV anglais. */
+export function cvFilename(lang: Lang): string {
+  return lang === 'fr' ? 'Foudil_Noah_CV.pdf' : 'Foudil_Noah_Resume.pdf';
+}

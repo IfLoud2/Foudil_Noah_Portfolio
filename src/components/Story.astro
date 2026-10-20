@@ -2,7 +2,7 @@
 import IntroSheet from './IntroSheet.astro';
 import { content, type Lang } from '../i18n/content';
 import { SITE } from '../site';
-import { cvUrl } from '../cv';
+import { cvFilename, cvUrl } from '../cv';
 
 interface Props {
   lang: Lang;
@@ -42,7 +42,7 @@ const hwChips = ['AD9850 DDS', 'AD7450 · 12 bit', 'ESP32', 'MAX4582 · INA128 �
           <p class="hero-intro">{t.intro}</p>
           <div class="hero-actions">
             <a class="button" href="#skills">{t.cta}</a>
-            {cv && <a class="button ghost" href={cv} download data-goatcounter-click="cv-download" data-goatcounter-title="CV">{content[lang].cv}</a>}
+            {cv && <a class="button ghost" href={cv} download={cvFilename(lang)} data-goatcounter-click="cv-download" data-goatcounter-title="CV">{content[lang].cv}</a>}
           </div>
         </div>
         <p class="scroll-hint" aria-hidden="true">{t.scroll}</p>
